@@ -1,0 +1,23 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "tabWidth": 4,
+    "useTabs": false,
+    "printWidth": 100,
+    "bracketSpacing": true,
+    "arrowParens": "always",
+    "ignorePatterns": [
+        ".github",
+        "dist",
+        "node_modules",
+        "pnpm-lock.yaml",
+        ".git",
+        ".vscode",
+        ".idea",
+        ".env",
+        "docker-compose.yml",
+        "db.json"
+    ]
+}
