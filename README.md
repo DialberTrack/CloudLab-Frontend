@@ -1,35 +1,47 @@
-# React + TypeScript + Vite
+# CloudLab Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interfaz web de CloudLab basada en React 19, TypeScript, Vite y Tailwind CSS.
+Incluye login, sesión con refresh token, workspaces, catálogo de imágenes,
+perfil y administración para usuarios con rol `admin`.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 20 o superior.
+- pnpm 12.15.0.
 
-## React Compiler
+## Desarrollo
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+cd frontend
+pnpm install
+pnpm dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Vite mostrará la URL local en la terminal y habilitará recarga en caliente.
+
+La API debe estar disponible en `http://localhost:8000`. Puedes cambiarla con:
+
+```bash
+VITE_API_URL=http://localhost:8000/api pnpm dev
+```
+
+## Scripts
+
+| Comando | Uso |
+| --- | --- |
+| `pnpm dev` | Servidor de desarrollo |
+| `pnpm build` | Comprobación TypeScript y compilación de producción |
+| `pnpm lint` | Ejecutar Oxlint |
+| `pnpm preview` | Previsualizar la compilación |
+
+## Estructura
+
+- `src/App.tsx`: componente raíz de la pantalla actual.
+- `src/App.css` y `src/index.css`: estilos.
+- `src/main.tsx`: punto de entrada React.
+- `src/assets/`: imágenes y recursos estáticos.
+- `public/`: archivos servidos sin transformación.
+
+El access token se mantiene en memoria; las solicitudes incluyen credenciales para
+usar la cookie HTTP-only de refresh. La API y su contrato están documentados en
+[`../backend/doc/README.md`](../backend/doc/README.md).
