@@ -42,7 +42,7 @@ export function WorkspacesPage() {
         setBusy('create');
         try { await workspaceApi.create(normalizedName, image); setName(''); await load(); } catch (reason) { setError(messageOf(reason)); } finally { setBusy(''); }
     };
-    const action = async (id: string, operation: 'start' | 'stop' | 'restart' | 'delete') => {
+    const action = async (id: string, operation: 'start' | 'stop' | 'restart' | 'retry' | 'delete') => {
         if (operation === 'delete' && !window.confirm('¿Eliminar este workspace?')) return;
         setBusy(id + operation);
         try {

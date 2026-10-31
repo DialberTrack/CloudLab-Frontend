@@ -1,6 +1,6 @@
 import type { ContainerImage, User, Workspace } from '../types/api';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL ?? '/api';
 
 export type Pagination = {
     page: number;
@@ -49,11 +49,7 @@ const refresh = () => {
     return refreshPromise;
 };
 
-const request = async <T>(
-    path: string,
-    options: RequestInit = {},
-    retry = true
-): Promise<T> => {
+const request = async <T>(path: string, options: RequestInit = {}, retry = true): Promise<T> => {
     const headers = new Headers(options.headers);
     if (options.body && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json');
@@ -129,16 +125,14 @@ export const authApi = {
 
 export const workspaceApi = {
     list: (params?: { page?: number; limit?: number; q?: string }) =>
-        request<{ data: Workspace[]; pagination: Pagination }>(
-            `/workspaces${query(params ?? {})}`
-        ),
+        request<{ data: Workspace[]; pagination: Pagination }>(`/workspaces${query(params ?? {})}`),
     create: (name: string, containerImageId: string) =>
         request<Workspace>('/workspaces', {
             method: 'POST',
             body: JSON.stringify({ name, container_image_id: containerImageId }),
         }),
     get: (id: string) => request<Workspace>(`/workspaces/${id}`),
-    action: (id: string, action: 'start' | 'stop' | 'restart') =>
+    action: (id: string, action: 'start' | 'stop' | 'restart' | 'retry') =>
         request<Workspace>(`/workspaces/${id}/${action}`, { method: 'POST' }),
     metrics: (id: string) =>
         request<{ data: Record<string, unknown> }>(`/workspaces/${id}/metrics`),
@@ -160,7 +154,10 @@ export const imageApi = {
     update: (
         id: string,
         input: Partial<
-            Pick<ContainerImage, 'name' | 'image' | 'description' | 'icon' | 'is_active' | 'sort_order'>
+            Pick<
+                ContainerImage,
+                'name' | 'image' | 'description' | 'icon' | 'is_active' | 'sort_order'
+            >
         >
     ) =>
         request<{ data: ContainerImage }>(`/container-images/${id}`, {
@@ -173,7 +170,8 @@ export const imageApi = {
 export const adminApi = {
     users: (params?: { page?: number; limit?: number; q?: string }) =>
         request<{ data: User[]; pagination: Pagination }>(`/admin/users${query(params ?? {})}`),
-    workspaces: (params?: { page?: number; limit?: number; q?: string }) =>
+    getUser: (id: string) => request<{ user: User }>(`/admin/users/${id}`).then((response) => response.user),
+    workspaces: (params?: { page?: number; limit?: number; q?: string; user_id?: string }) =>
         request<{ data: Workspace[]; pagination: Pagination }>(
             `/admin/workspaces${query(params ?? {})}`
         ),

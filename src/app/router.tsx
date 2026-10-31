@@ -11,6 +11,8 @@ import { ProfilePage } from '../pages/profile/ProfilePage';
 import { AdminPage } from '../pages/admin/AdminPage';
 import { AdminWorkspacesPage } from '../pages/admin/AdminWorkspacesPage';
 import { AdminImagesPage } from '../pages/admin/AdminImagesPage';
+import { AdminUserDetailPage } from '../pages/admin/AdminUserDetailPage';
+import { NotFoundPage } from '../pages/NotFoundPage';
 
 function ProtectedRoute() {
     const { user, loading } = useAuth();
@@ -37,12 +39,13 @@ export function AppRouter() {
                     <Route path="profile" element={<ProfilePage />} />
                     <Route element={<AdminRoute />}>
                         <Route path="admin/users" element={<AdminPage />} />
+                        <Route path="admin/users/:id" element={<AdminUserDetailPage />} />
                         <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
                         <Route path="admin/images" element={<AdminImagesPage />} />
                     </Route>
                 </Route>
             </Route>
-            <Route path="*" element={<Navigate to={user ? '/' : '/login'} replace />} />
+            <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );
 }
