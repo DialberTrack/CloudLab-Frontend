@@ -1,20 +1,26 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../app/AuthContext';
 import { Alert } from '../../components/Alert';
 import { ContainerImageIcon } from '../../components/ContainerImageIcon';
 import { EmptyState } from '../../components/EmptyState';
 import { Loading } from '../../components/Loading';
+import { Modal } from '../../components/Modal';
 import { PageHeader } from '../../components/PageHeader';
-import { imageApi } from '../../lib/api';
+import { imageApi, workspaceApi } from '../../lib/api';
 import { messageOf } from '../../lib/errors';
 import type { ContainerImage } from '../../types/api';
 
 export function ImagesPage() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [items, setItems] = useState<ContainerImage[]>([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState<ContainerImage | null>(null);
+    const [workspaceName, setWorkspaceName] = useState('');
+    const [modalError, setModalError] = useState('');
+    const [creating, setCreating] = useState(false);
     useEffect(() => {
         imageApi
             .list()
@@ -33,7 +39,7 @@ export function ImagesPage() {
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {items.map((item) => (
-                        <article className="panel flex flex-col" key={item.id}>
+                        <article className="panel flex h-full flex-col" key={item.id}>
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex min-w-0 items-center gap-3">
                                     <ContainerImageIcon name={item.name} icon={item.icon} />
@@ -49,26 +55,98 @@ export function ImagesPage() {
                             {item.description && (
                                 <p className="mt-3 text-sm text-slate-400">{item.description}</p>
                             )}
-                            {item.is_active || user?.role === 'admin' ? (
-                                <Link
-                                    className="primary-button mt-5 text-center"
-                                    to={`/workspaces?image=${encodeURIComponent(item.id)}`}
-                                >
+                            <div className="mt-auto pt-5">
+                                {item.is_active || user?.role === 'admin' ? (
+                                    <button
+                                        className="primary-button w-full"
+                                        onClick={() => {
+                                            setSelectedImage(item);
+                                            setWorkspaceName('');
+                                            setModalError('');
+                                        }}
+                                    >
                                     {item.is_active
                                         ? 'Usar en workspace'
                                         : 'Usar como administrador'}
-                                </Link>
-                            ) : (
-                                <span
-                                    className="mt-5 rounded-xl border border-white/10 px-4 py-2.5 text-center text-sm text-slate-600"
-                                    title="Activa esta imagen desde administración para usarla"
-                                >
-                                    No disponible
-                                </span>
-                            )}
+                                    </button>
+                                ) : (
+                                    <span
+                                        className="block rounded-xl border border-white/10 px-4 py-2.5 text-center text-sm text-slate-600"
+                                        title="Activa esta imagen desde administración para usarla"
+                                    >
+                                        No disponible
+                                    </span>
+                                )}
+                            </div>
                         </article>
                     ))}
                 </div>
+            )}
+            {selectedImage && (
+                <Modal
+                    title="Crear workspace"
+                    subtitle={`Usando la imagen ${selectedImage.name}.`}
+                    onClose={() => {
+                        setSelectedImage(null);
+                        setModalError('');
+                    }}
+                >
+                    {modalError && (
+                        <div className="mb-4">
+                            <Alert message={modalError} onClose={() => setModalError('')} />
+                        </div>
+                    )}
+                    <label className="field-label">
+                        Nombre del workspace
+                        <input
+                            className="field"
+                            value={workspaceName}
+                            onChange={(event) => {
+                                setWorkspaceName(event.target.value);
+                                setModalError('');
+                            }}
+                            placeholder="Mi workspace"
+                            autoFocus
+                        />
+                    </label>
+                    <div className="mt-6 flex justify-end gap-2">
+                        <button
+                            className="ghost-button"
+                            onClick={() => setSelectedImage(null)}
+                            disabled={creating}
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            className="primary-button"
+                            disabled={creating}
+                            onClick={async () => {
+                                const normalizedName = workspaceName.trim();
+                                if (normalizedName.length < 3) {
+                                    setModalError(
+                                        'El nombre debe tener al menos 3 caracteres.'
+                                    );
+                                    return;
+                                }
+                                setCreating(true);
+                                try {
+                                    const workspace = await workspaceApi.create(
+                                        normalizedName,
+                                        selectedImage.id
+                                    );
+                                    setSelectedImage(null);
+                                    navigate(`/workspaces/${workspace.id}`);
+                                } catch (reason) {
+                                    setModalError(messageOf(reason));
+                                } finally {
+                                    setCreating(false);
+                                }
+                            }}
+                        >
+                            {creating ? 'Creando...' : 'Crear workspace'}
+                        </button>
+                    </div>
+                </Modal>
             )}
         </>
     );

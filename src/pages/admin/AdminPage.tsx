@@ -14,6 +14,7 @@ export function AdminPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
     const [modalError, setModalError] = useState('');
     const [form, setForm] = useState({
         name: '',
@@ -34,6 +35,36 @@ export function AdminPage() {
         try {
             await adminApi.createUser(form);
             setForm({ name: '', email: '', password: '', role: 'user' });
+            setModalOpen(false);
+            setModalError('');
+            await load();
+        } catch (reason) {
+            setModalError(messageOf(reason));
+        }
+    };
+    const edit = (user: User) => {
+        setEditingUser(user);
+        setForm({
+            name: user.name,
+            email: user.email,
+            password: '',
+            role: user.role,
+        });
+        setModalError('');
+        setModalOpen(true);
+    };
+    const saveEdit = async () => {
+        if (!editingUser) return;
+        try {
+            const updates: Parameters<typeof adminApi.updateUser>[1] = {
+                name: form.name,
+                email: form.email,
+            };
+            if (editingUser.role !== 'admin') {
+                updates.role = form.role;
+            }
+            await adminApi.updateUser(editingUser.id, updates);
+            setEditingUser(null);
             setModalOpen(false);
             setModalError('');
             await load();
@@ -77,6 +108,7 @@ export function AdminPage() {
                     <button
                         className="primary-button"
                         onClick={() => {
+                            setEditingUser(null);
                             setModalError('');
                             setModalOpen(true);
                         }}
@@ -135,6 +167,12 @@ export function AdminPage() {
                                             <td className="space-x-2">
                                                 <button
                                                     className="small-button"
+                                                    onClick={() => edit(user)}
+                                                >
+                                                    Editar
+                                                </button>
+                                                <button
+                                                    className="small-button"
                                                     disabled={isAdmin}
                                                     title={
                                                         isAdmin
@@ -182,10 +220,15 @@ export function AdminPage() {
             </section>
             {modalOpen && (
                 <Modal
-                    title="Crear usuario"
-                    subtitle="Registra una cuenta nueva en CloudLab."
+                    title={editingUser ? 'Editar usuario' : 'Crear usuario'}
+                    subtitle={
+                        editingUser
+                            ? 'Actualiza los datos y permisos de la cuenta.'
+                            : 'Registra una cuenta nueva en CloudLab.'
+                    }
                     onClose={() => {
                         setModalOpen(false);
+                        setEditingUser(null);
                         setModalError('');
                     }}
                 >
@@ -212,21 +255,24 @@ export function AdminPage() {
                                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                             />
                         </label>
-                        <label className="field-label">
-                            Contraseña
-                            <input
-                                className="field"
-                                type="password"
-                                placeholder="Contraseña"
-                                value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                            />
-                        </label>
+                        {!editingUser && (
+                            <label className="field-label">
+                                Contraseña
+                                <input
+                                    className="field"
+                                    type="password"
+                                    placeholder="Contraseña"
+                                    value={form.password}
+                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                />
+                            </label>
+                        )}
                         <label className="field-label">
                             Rol
                             <select
                                 className="field"
                                 value={form.role}
+                                disabled={editingUser?.role === 'admin'}
                                 onChange={(e) =>
                                     setForm({ ...form, role: e.target.value as User['role'] })
                                 }
@@ -239,8 +285,11 @@ export function AdminPage() {
                             <button className="ghost-button" onClick={() => setModalOpen(false)}>
                                 Cancelar
                             </button>
-                            <button className="primary-button" onClick={create}>
-                                Crear usuario
+                            <button
+                                className="primary-button"
+                                onClick={() => (editingUser ? saveEdit() : create())}
+                            >
+                                {editingUser ? 'Guardar cambios' : 'Crear usuario'}
                             </button>
                         </div>
                     </div>
