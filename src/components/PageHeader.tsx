@@ -10,10 +10,10 @@ export function PageHeader({
     action?: ReactNode;
 }) {
     return (
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="page-header">
             <div>
-                <h1 className="text-3xl font-semibold tracking-tight lg:text-4xl">{title}</h1>
-                <p className="mt-2 text-slate-500">{subtitle}</p>
+                <h1 className="page-title">{title}</h1>
+                <p className="page-subtitle">{subtitle}</p>
             </div>
             {action}
         </div>

@@ -37,17 +37,18 @@ const formatBytes = (value = 0) => {
 const cpuPercent = (metrics: Metrics) => {
     const current = metrics.cpu_stats;
     const previous = metrics.precpu_stats;
-    const totalDelta = (current?.cpu_usage?.total_usage ?? 0) - (previous?.cpu_usage?.total_usage ?? 0);
+    const totalDelta =
+        (current?.cpu_usage?.total_usage ?? 0) - (previous?.cpu_usage?.total_usage ?? 0);
     const systemDelta = (current?.system_cpu_usage ?? 0) - (previous?.system_cpu_usage ?? 0);
     const cpus = current?.online_cpus ?? 1;
     return systemDelta > 0 ? Math.min(100, (totalDelta / systemDelta) * cpus * 100) : 0;
 };
 
 const metricCard = (label: string, value: string, detail: string) => (
-    <div className="rounded-xl border border-white/[0.07] bg-black/10 p-4">
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="mt-2 text-xl font-semibold text-slate-100">{value}</p>
-        <p className="mt-1 text-xs text-slate-600">{detail}</p>
+    <div className="metrics-card">
+        <p className="metrics-label">{label}</p>
+        <p className="metrics-value">{value}</p>
+        <p className="metrics-detail">{detail}</p>
     </div>
 );
 
@@ -65,26 +66,44 @@ export function MetricsPanel({ value }: { value: Record<string, unknown> }) {
     );
     const io = (metrics.blkio_stats?.io_service_bytes_recursive ?? []).reduce(
         (total, item) => ({
-            read: total.read + (item.op?.toLowerCase() === 'read' ? item.value ?? 0 : 0),
-            write: total.write + (item.op?.toLowerCase() === 'write' ? item.value ?? 0 : 0),
+            read: total.read + (item.op?.toLowerCase() === 'read' ? (item.value ?? 0) : 0),
+            write: total.write + (item.op?.toLowerCase() === 'write' ? (item.value ?? 0) : 0),
         }),
         { read: 0, write: 0 }
     );
 
     return (
         <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-                {metricCard('CPU', `${cpuPercent(metrics).toFixed(1)}%`, `${metrics.cpu_stats?.online_cpus ?? 0} CPUs disponibles`)}
-                {metricCard('Memoria', `${formatBytes(memory)}`, `${memoryPercent.toFixed(1)}% de ${formatBytes(memoryLimit)}`)}
+            <div className="metrics-grid">
+                {metricCard(
+                    'CPU',
+                    `${cpuPercent(metrics).toFixed(1)}%`,
+                    `${metrics.cpu_stats?.online_cpus ?? 0} CPUs disponibles`
+                )}
+                {metricCard(
+                    'Memoria',
+                    `${formatBytes(memory)}`,
+                    `${memoryPercent.toFixed(1)}% de ${formatBytes(memoryLimit)}`
+                )}
                 {metricCard('Red recibida', formatBytes(network.rx), 'Total RX')}
                 {metricCard('Red enviada', formatBytes(network.tx), 'Total TX')}
-                {metricCard('Procesos', String(metrics.pids_stats?.current ?? 0), `Límite ${metrics.pids_stats?.limit ?? 'sin límite'}`)}
-                {metricCard('Disco', `${formatBytes(io.read)} / ${formatBytes(io.write)}`, 'Lectura / escritura')}
+                {metricCard(
+                    'Procesos',
+                    String(metrics.pids_stats?.current ?? 0),
+                    `Límite ${metrics.pids_stats?.limit ?? 'sin límite'}`
+                )}
+                {metricCard(
+                    'Disco',
+                    `${formatBytes(io.read)} / ${formatBytes(io.write)}`,
+                    'Lectura / escritura'
+                )}
             </div>
-            <div className="flex flex-wrap gap-4 text-xs text-slate-600">
+            <div className="metrics-summary">
                 <span>SO: {metrics.os_type ?? '—'}</span>
                 <span>Contenedor: {metrics.name ?? '—'}</span>
-                <span>Lectura: {metrics.read ? new Date(metrics.read).toLocaleString('es-MX') : '—'}</span>
+                <span>
+                    Lectura: {metrics.read ? new Date(metrics.read).toLocaleString('es-MX') : '—'}
+                </span>
             </div>
         </div>
     );

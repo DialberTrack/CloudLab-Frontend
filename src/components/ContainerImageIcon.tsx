@@ -1,12 +1,6 @@
 import { useState } from 'react';
 
-export function ContainerImageIcon({
-    name,
-    icon,
-}: {
-    name: string;
-    icon?: string | null;
-}) {
+export function ContainerImageIcon({ name, icon }: { name: string; icon?: string | null }) {
     const [failed, setFailed] = useState(false);
     const source = icon?.trim();
     const isImageUrl = source?.startsWith('http://') || source?.startsWith('https://');
@@ -28,7 +22,9 @@ export function ContainerImageIcon({
             title={source || name}
             aria-hidden="true"
         >
-            {source && !isImageUrl ? source.slice(0, 2).toUpperCase() : name.slice(0, 1).toUpperCase()}
+            {source && !isImageUrl
+                ? source.slice(0, 2).toUpperCase()
+                : name.slice(0, 1).toUpperCase()}
         </span>
     );
 }

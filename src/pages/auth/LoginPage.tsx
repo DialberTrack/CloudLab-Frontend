@@ -26,23 +26,18 @@ export function LoginPage() {
     };
 
     return (
-        <main className="relative grid h-[100dvh] place-items-center overflow-hidden bg-[#080b14] px-6 text-slate-100">
-            <div className="pointer-events-none absolute left-0 top-0 h-96 w-96 rounded-full bg-violet-600/20 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
-            <form
-                onSubmit={submit}
-                className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.06] p-8 shadow-2xl shadow-black/30 backdrop-blur-xl"
-            >
-                <div className="mb-10">
-                    <div className="mb-7 flex items-center gap-3">
+        <main className="auth-page">
+            <div className="background-orb background-orb-violet" />
+            <div className="background-orb background-orb-cyan" />
+            <form onSubmit={submit} className="auth-card">
+                <div className="auth-header">
+                    <div className="auth-brand">
                         <Logo />
                         <span className="text-lg font-semibold tracking-tight">CloudLab</span>
                     </div>
-                    <p className="mb-2 text-sm font-medium text-cyan-300">Panel de control</p>
-                    <h1 className="text-3xl font-semibold tracking-tight">Bienvenido de vuelta</h1>
-                    <p className="mt-2 text-sm text-slate-400">
-                        Administra tus entornos desde un solo lugar.
-                    </p>
+                    <p className="auth-eyebrow">Panel de control</p>
+                    <h1 className="auth-title">Bienvenido de vuelta</h1>
+                    <p className="auth-description">Administra tus entornos desde un solo lugar.</p>
                 </div>
                 {error && <Alert message={error} />}
                 <label className="field-label">

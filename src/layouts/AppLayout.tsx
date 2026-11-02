@@ -18,7 +18,7 @@ export function AppLayout() {
     const current = links.find((link) => link.to === location.pathname)?.label ?? 'CloudLab';
 
     return (
-        <div className="min-h-screen bg-[#080b14] text-slate-100">
+        <div className="app-shell">
             <aside
                 className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-white/[0.07] bg-[#0b0f1b] p-5 transition-transform lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
             >
@@ -31,27 +31,33 @@ export function AppLayout() {
                 </p>
                 <nav className="space-y-1">
                     {links.map((link) => (
-                            <NavLink
-                                key={link.to}
-                                to={link.to}
-                                end={link.end}
-                                onClick={() => setOpen(false)}
-                                className={({ isActive }) =>
-                                    `nav-item ${isActive ? 'nav-item-active' : ''}`
-                                }
-                            >
-                                <span className="text-lg opacity-80">{link.icon}</span>
-                                {link.label}
-                            </NavLink>
+                        <NavLink
+                            key={link.to}
+                            to={link.to}
+                            end={link.end}
+                            onClick={() => setOpen(false)}
+                            className={({ isActive }) =>
+                                `nav-item ${isActive ? 'nav-item-active' : ''}`
+                            }
+                        >
+                            <span className="text-lg opacity-80">{link.icon}</span>
+                            {link.label}
+                        </NavLink>
                     ))}
                     {user?.role === 'admin' && (
                         <div className="mt-2 border-t border-white/[0.07] pt-3">
                             <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
                                 Administración
                             </p>
-                            <NavLink to="/admin/users" className="nav-item text-xs">♙ Usuarios</NavLink>
-                            <NavLink to="/admin/workspaces" className="nav-item text-xs">◈ Workspaces</NavLink>
-                            <NavLink to="/admin/images" className="nav-item text-xs">▣ Imágenes</NavLink>
+                            <NavLink to="/admin/users" className="nav-item text-xs">
+                                ♙ Usuarios
+                            </NavLink>
+                            <NavLink to="/admin/workspaces" className="nav-item text-xs">
+                                ◈ Workspaces
+                            </NavLink>
+                            <NavLink to="/admin/images" className="nav-item text-xs">
+                                ▣ Imágenes
+                            </NavLink>
                         </div>
                     )}
                 </nav>
@@ -73,20 +79,34 @@ export function AppLayout() {
                 </div>
             </aside>
             {open && (
-                <button className="fixed inset-0 z-20 bg-black/50 lg:hidden" onClick={() => setOpen(false)} aria-label="Cerrar menú" />
+                <button
+                    className="fixed inset-0 z-20 bg-black/50 lg:hidden"
+                    onClick={() => setOpen(false)}
+                    aria-label="Cerrar menú"
+                />
             )}
             <div className="lg:pl-64">
                 <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-white/[0.07] bg-[#080b14]/80 px-5 backdrop-blur-xl lg:px-10">
-                    <button className="text-2xl text-slate-400 lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menú">
+                    <button
+                        className="text-2xl text-slate-400 lg:hidden"
+                        onClick={() => setOpen(true)}
+                        aria-label="Abrir menú"
+                    >
                         ☰
                     </button>
                     <p className="hidden text-xs font-medium uppercase tracking-[0.2em] text-slate-500 lg:block">
                         CloudLab / {current}
                     </p>
                     <div className="flex items-center gap-3">
-                        <span className="hidden text-xs text-slate-500 sm:block">Sistema operativo</span>
+                        <span className="hidden text-xs text-slate-500 sm:block">
+                            Sistema operativo
+                        </span>
                         <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50" />
-                        {user && <div className="lg:hidden"><Avatar user={user} /></div>}
+                        {user && (
+                            <div className="lg:hidden">
+                                <Avatar user={user} />
+                            </div>
+                        )}
                     </div>
                 </header>
                 <main className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10 lg:py-12">

@@ -17,15 +17,12 @@ export function ConfirmDialog({
 }) {
     return (
         <Modal title={title} onClose={onClose}>
-            <p className="text-sm leading-6 text-slate-400">{message}</p>
-            <div className="mt-7 flex justify-end gap-3">
+            <p className="confirm-message">{message}</p>
+            <div className="confirm-actions">
                 <button className="ghost-button" onClick={onClose}>
                     Cancelar
                 </button>
-                <button
-                    className={danger ? 'danger-button' : 'primary-button'}
-                    onClick={onConfirm}
-                >
+                <button className={danger ? 'danger-button' : 'primary-button'} onClick={onConfirm}>
                     {confirmLabel}
                 </button>
             </div>

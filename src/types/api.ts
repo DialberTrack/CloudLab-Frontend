@@ -17,6 +17,7 @@ export type Workspace = {
     name: string;
     status: WorkspaceStatus;
     container_id?: string | null;
+    port?: number | null;
     image_name: string;
     image: string;
     created_at: string;

@@ -14,7 +14,7 @@ export function Modal({
     return (
         <div className="modal-backdrop">
             <div className="modal">
-                <div className="mb-6 flex justify-between gap-4">
+                <div className="modal-header">
                     <div>
                         <h2 className="section-title">{title}</h2>
                         {subtitle && <p className="section-subtitle">{subtitle}</p>}

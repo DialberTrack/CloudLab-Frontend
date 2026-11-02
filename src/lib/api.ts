@@ -136,6 +136,8 @@ export const workspaceApi = {
         request<Workspace>(`/workspaces/${id}/${action}`, { method: 'POST' }),
     metrics: (id: string) =>
         request<{ data: Record<string, unknown> }>(`/workspaces/${id}/metrics`),
+    createContainerSession: (id: string) =>
+        request<void>(`/workspaces/${id}/container-session`, { method: 'POST' }),
     remove: (id: string) => request(`/workspaces/${id}`, { method: 'DELETE' }),
 };
 
@@ -170,7 +172,8 @@ export const imageApi = {
 export const adminApi = {
     users: (params?: { page?: number; limit?: number; q?: string }) =>
         request<{ data: User[]; pagination: Pagination }>(`/admin/users${query(params ?? {})}`),
-    getUser: (id: string) => request<{ user: User }>(`/admin/users/${id}`).then((response) => response.user),
+    getUser: (id: string) =>
+        request<{ user: User }>(`/admin/users/${id}`).then((response) => response.user),
     workspaces: (params?: { page?: number; limit?: number; q?: string; user_id?: string }) =>
         request<{ data: Workspace[]; pagination: Pagination }>(
             `/admin/workspaces${query(params ?? {})}`

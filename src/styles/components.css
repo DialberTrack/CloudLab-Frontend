@@ -1,0 +1,163 @@
+@layer components {
+    .app-shell {
+        @apply min-h-screen bg-[#080b14] text-slate-100;
+    }
+
+    .auth-page,
+    .not-found-page {
+        @apply relative grid min-h-[100dvh] place-items-center overflow-hidden bg-[#080b14] px-6 text-slate-100;
+    }
+
+    .auth-card,
+    .not-found-card {
+        @apply relative w-full rounded-3xl border border-white/10 bg-white/[0.06] p-8 shadow-2xl shadow-black/30 backdrop-blur-xl;
+    }
+
+    .auth-card {
+        @apply max-w-md;
+    }
+
+    .not-found-card {
+        @apply max-w-lg text-center sm:p-10;
+    }
+
+    .not-found-brand {
+        @apply mb-8 flex items-center justify-center gap-3;
+    }
+
+    .not-found-code {
+        @apply text-7xl font-bold tracking-tight text-violet-300 sm:text-8xl;
+    }
+
+    .not-found-title {
+        @apply mt-5 text-2xl font-semibold tracking-tight;
+    }
+
+    .not-found-description {
+        @apply mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-400;
+    }
+
+    .background-orb {
+        @apply pointer-events-none absolute h-96 w-96 rounded-full blur-3xl;
+    }
+
+    .background-orb-violet {
+        @apply left-0 top-0 bg-violet-600/20;
+    }
+
+    .background-orb-cyan {
+        @apply bottom-0 right-0 bg-cyan-500/10;
+    }
+
+    .auth-brand {
+        @apply mb-7 flex items-center gap-3;
+    }
+
+    .auth-header {
+        @apply mb-10;
+    }
+
+    .auth-eyebrow {
+        @apply mb-2 text-sm font-medium text-cyan-300;
+    }
+
+    .auth-title {
+        @apply text-3xl font-semibold tracking-tight;
+    }
+
+    .auth-description {
+        @apply mt-2 text-sm text-slate-400;
+    }
+
+    .page-header {
+        @apply mb-8 flex flex-wrap items-end justify-between gap-4;
+    }
+
+    .page-title {
+        @apply text-3xl font-semibold tracking-tight lg:text-4xl;
+    }
+
+    .page-subtitle {
+        @apply mt-2 text-slate-500;
+    }
+
+    .alert {
+        @apply flex items-start justify-between gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200;
+    }
+
+    .empty-state {
+        @apply grid place-items-center rounded-xl border border-dashed border-white/10 py-14 text-center;
+    }
+
+    .empty-state-text {
+        @apply text-sm text-slate-500;
+    }
+
+    .confirm-message {
+        @apply text-sm leading-6 text-slate-400;
+    }
+
+    .confirm-actions {
+        @apply mt-7 flex justify-end gap-3;
+    }
+
+    .modal-header {
+        @apply mb-6 flex justify-between gap-4;
+    }
+
+    .workspace-card {
+        @apply rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5 transition hover:border-white/15 hover:bg-white/[0.05];
+    }
+
+    .workspace-card-header {
+        @apply mb-5 flex items-start justify-between;
+    }
+
+    .workspace-icon {
+        @apply grid h-11 w-11 place-items-center rounded-xl bg-violet-500/10 text-xl text-violet-300;
+    }
+
+    .workspace-meta {
+        @apply mt-1 truncate text-xs text-slate-500;
+    }
+
+    .workspace-error {
+        @apply mt-3 rounded-lg bg-rose-500/10 p-2 text-xs text-rose-300;
+    }
+
+    .workspace-actions {
+        @apply mt-6 flex flex-wrap gap-2;
+    }
+
+    .metrics-card {
+        @apply rounded-xl border border-white/[0.07] bg-black/10 p-4;
+    }
+
+    .metrics-label {
+        @apply text-xs text-slate-500;
+    }
+
+    .metrics-value {
+        @apply mt-2 text-xl font-semibold text-slate-100;
+    }
+
+    .metrics-detail {
+        @apply mt-1 text-xs text-slate-600;
+    }
+
+    .metrics-grid {
+        @apply grid gap-3 sm:grid-cols-2;
+    }
+
+    .metrics-summary {
+        @apply flex flex-wrap gap-4 text-xs text-slate-600;
+    }
+
+    .desktop-page {
+        @apply flex h-[calc(100dvh-10rem)] flex-col;
+    }
+
+    .desktop-frame {
+        @apply min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black;
+    }
+}

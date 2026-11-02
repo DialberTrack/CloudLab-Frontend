@@ -13,6 +13,7 @@ import { AdminWorkspacesPage } from '../pages/admin/AdminWorkspacesPage';
 import { AdminImagesPage } from '../pages/admin/AdminImagesPage';
 import { AdminUserDetailPage } from '../pages/admin/AdminUserDetailPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
+import { WorkspaceDesktopPage } from '../pages/workspaces/WorkspaceDesktopPage';
 
 function ProtectedRoute() {
     const { user, loading } = useAuth();
@@ -35,6 +36,7 @@ export function AppRouter() {
                     <Route index element={<DashboardPage />} />
                     <Route path="workspaces" element={<WorkspacesPage />} />
                     <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
+                    <Route path="workspaces/:id/desktop" element={<WorkspaceDesktopPage />} />
                     <Route path="images" element={<ImagesPage />} />
                     <Route path="profile" element={<ProfilePage />} />
                     <Route element={<AdminRoute />}>
