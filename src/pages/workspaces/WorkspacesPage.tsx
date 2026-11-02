@@ -13,7 +13,10 @@ export function WorkspacesPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState('');
-    const load = useCallback(() => workspaceApi.list().then((response) => setItems(response.data)), []);
+    const load = useCallback(
+        () => workspaceApi.list().then((response) => setItems(response.data)),
+        []
+    );
     useEffect(() => {
         load()
             .catch((reason) => setError(messageOf(reason)))

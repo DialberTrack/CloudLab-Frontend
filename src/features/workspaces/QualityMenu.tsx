@@ -46,7 +46,7 @@ export function QualityMenu({
     };
 
     return (
-        <div ref={menuRef} className="relative">
+        <div ref={menuRef} className="quality-menu">
             <button
                 type="button"
                 className="small-button small-button-primary"
@@ -57,20 +57,20 @@ export function QualityMenu({
                 ⚙ Calidad
             </button>
             {open && (
-                <div className="absolute right-0 z-10 mt-2 flex max-h-[calc(100dvh-6rem)] w-80 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#111624] shadow-2xl">
-                    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 p-4">
-                        <h2 className="text-sm font-semibold text-slate-100">Calidad KasmVNC</h2>
+                <div className="quality-panel">
+                    <div className="quality-panel-header">
+                        <h2 className="quality-panel-title">Calidad KasmVNC</h2>
                         <button type="button" className="small-button" onClick={forceImageMode}>
                             Forzar modo imagen
                         </button>
                     </div>
-                    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+                    <div className="quality-panel-controls">
                         {QUALITY_CONTROLS.map((control) => (
-                            <label key={control.name} className="block text-xs text-slate-400">
-                                <span className="mb-1 flex items-center justify-between gap-2">
+                            <label key={control.name} className="quality-control">
+                                <span className="quality-control-label">
                                     <span>{control.label}</span>
                                     {control.type === 'range' && (
-                                        <output className="font-mono text-slate-200">
+                                        <output className="quality-control-value">
                                             {values[control.name] ?? '—'}
                                         </output>
                                     )}
@@ -100,13 +100,15 @@ export function QualityMenu({
                                         min={control.min}
                                         max={control.max}
                                         value={values[control.name] ?? ''}
-                                        onChange={(event) => updateValue(control.name, event.target.value)}
+                                        onChange={(event) =>
+                                            updateValue(control.name, event.target.value)
+                                        }
                                     />
                                 )}
                             </label>
                         ))}
                     </div>
-                    <div className="flex shrink-0 justify-end gap-2 border-t border-white/10 p-4">
+                    <div className="quality-panel-actions">
                         <button
                             type="button"
                             className="small-button"

@@ -5,12 +5,12 @@
 
     .auth-page,
     .not-found-page {
-        @apply relative grid min-h-[100dvh] place-items-center overflow-hidden bg-[#080b14] px-6 text-slate-100;
+        @apply relative grid min-h-dvh place-items-center overflow-hidden bg-[#080b14] px-6 text-slate-100;
     }
 
     .auth-card,
     .not-found-card {
-        @apply relative w-full rounded-3xl border border-white/10 bg-white/[0.06] p-8 shadow-2xl shadow-black/30 backdrop-blur-xl;
+        @apply relative w-full rounded-3xl border border-white/10 bg-white/6 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl;
     }
 
     .auth-card {
@@ -106,7 +106,7 @@
     }
 
     .workspace-card {
-        @apply rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5 transition hover:border-white/15 hover:bg-white/[0.05];
+        @apply rounded-2xl border border-white/[0.07] bg-white/3 p-5 transition hover:border-white/15 hover:bg-white/5;
     }
 
     .workspace-card-header {

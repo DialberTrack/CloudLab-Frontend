@@ -8,7 +8,7 @@ export function ContainerImageIcon({ name, icon }: { name: string; icon?: string
     if (isImageUrl && !failed) {
         return (
             <img
-                className="h-9 w-9 rounded-lg object-cover ring-1 ring-white/10"
+                className="container-image"
                 src={source}
                 alt=""
                 onError={() => setFailed(true)}
@@ -18,7 +18,7 @@ export function ContainerImageIcon({ name, icon }: { name: string; icon?: string
 
     return (
         <span
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-violet-500/10 text-sm font-semibold text-violet-300"
+            className="container-image-icon"
             title={source || name}
             aria-hidden="true"
         >

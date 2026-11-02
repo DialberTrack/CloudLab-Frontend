@@ -1,0 +1,25 @@
+@layer components {
+    .avatar {
+        @apply grid shrink-0 place-items-center rounded-full bg-linear-to-br from-violet-500 to-cyan-400 font-semibold text-white;
+    }
+
+    .avatar-large {
+        @apply h-20 w-20 text-2xl;
+    }
+
+    .avatar-small {
+        @apply h-9 w-9 text-xs;
+    }
+
+    .loading-state {
+        @apply grid min-h-48 place-items-center text-sm text-slate-500;
+    }
+
+    .container-image-icon {
+        @apply grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-violet-500/10 text-sm font-semibold text-violet-300;
+    }
+
+    .container-image {
+        @apply h-9 w-9 rounded-lg object-cover ring-1 ring-white/10;
+    }
+}

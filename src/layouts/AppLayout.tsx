@@ -19,17 +19,13 @@ export function AppLayout() {
 
     return (
         <div className="app-shell">
-            <aside
-                className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-white/[0.07] bg-[#0b0f1b] p-5 transition-transform lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
-            >
-                <div className="flex items-center gap-3 px-2 py-4">
+            <aside className={`app-sidebar ${open ? 'app-sidebar-open' : 'app-sidebar-closed'}`}>
+                <div className="app-sidebar-brand">
                     <Logo />
                     <span className="font-semibold tracking-tight">CloudLab</span>
                 </div>
-                <p className="mb-3 mt-10 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
-                    Workspace
-                </p>
-                <nav className="space-y-1">
+                <p className="app-sidebar-section-label">Workspace</p>
+                <nav className="app-sidebar-nav">
                     {links.map((link) => (
                         <NavLink
                             key={link.to}
@@ -40,15 +36,13 @@ export function AppLayout() {
                                 `nav-item ${isActive ? 'nav-item-active' : ''}`
                             }
                         >
-                            <span className="text-lg opacity-80">{link.icon}</span>
+                            <span className="app-sidebar-nav-icon">{link.icon}</span>
                             {link.label}
                         </NavLink>
                     ))}
                     {user?.role === 'admin' && (
-                        <div className="mt-2 border-t border-white/[0.07] pt-3">
-                            <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
-                                Administración
-                            </p>
+                        <div className="app-sidebar-admin">
+                            <p className="app-sidebar-admin-label">Administración</p>
                             <NavLink to="/admin/users" className="nav-item text-xs">
                                 ♙ Usuarios
                             </NavLink>
@@ -61,17 +55,17 @@ export function AppLayout() {
                         </div>
                     )}
                 </nav>
-                <div className="absolute bottom-5 left-5 right-5 border-t border-white/[0.07] pt-4">
+                <div className="app-sidebar-user">
                     {user && (
-                        <div className="flex items-center gap-3 px-2">
+                        <div className="app-sidebar-user-info">
                             <Avatar user={user} />
                             <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">{user.name}</p>
-                                <p className="truncate text-xs text-slate-500">{user.email}</p>
+                                <p className="app-sidebar-user-name">{user.name}</p>
+                                <p className="app-sidebar-user-email">{user.email}</p>
                             </div>
                         </div>
                     )}
-                    <div className="mt-5 border-t border-white/[0.07] pt-4">
+                    <div className="app-sidebar-logout">
                         <button className="logout-link" onClick={signOut}>
                             ↪ Cerrar sesión
                         </button>
@@ -80,28 +74,24 @@ export function AppLayout() {
             </aside>
             {open && (
                 <button
-                    className="fixed inset-0 z-20 bg-black/50 lg:hidden"
+                    className="app-mobile-overlay"
                     onClick={() => setOpen(false)}
                     aria-label="Cerrar menú"
                 />
             )}
-            <div className="lg:pl-64">
-                <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-white/[0.07] bg-[#080b14]/80 px-5 backdrop-blur-xl lg:px-10">
+            <div className="app-content">
+                <header className="app-header">
                     <button
-                        className="text-2xl text-slate-400 lg:hidden"
+                        className="app-mobile-menu-button"
                         onClick={() => setOpen(true)}
                         aria-label="Abrir menú"
                     >
                         ☰
                     </button>
-                    <p className="hidden text-xs font-medium uppercase tracking-[0.2em] text-slate-500 lg:block">
-                        CloudLab / {current}
-                    </p>
-                    <div className="flex items-center gap-3">
-                        <span className="hidden text-xs text-slate-500 sm:block">
-                            Sistema operativo
-                        </span>
-                        <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50" />
+                    <p className="app-header-context">CloudLab / {current}</p>
+                    <div className="app-header-status">
+                        <span className="app-header-status-label">Sistema operativo</span>
+                        <span className="app-header-status-indicator" />
                         {user && (
                             <div className="lg:hidden">
                                 <Avatar user={user} />
@@ -109,7 +99,7 @@ export function AppLayout() {
                         )}
                     </div>
                 </header>
-                <main className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10 lg:py-12">
+                <main className="app-main">
                     <Outlet />
                 </main>
             </div>

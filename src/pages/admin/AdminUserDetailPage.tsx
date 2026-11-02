@@ -87,7 +87,7 @@ export function AdminUserDetailPage() {
                                         <Link
                                             key={workspace.id}
                                             to={`/workspaces/${workspace.id}`}
-                                            className="flex items-center justify-between rounded-xl border border-white/[0.06] px-4 py-3 transition hover:border-violet-400/30 hover:bg-white/[0.04]"
+                                            className="flex items-center justify-between rounded-xl border border-white/6 px-4 py-3 transition hover:border-violet-400/30 hover:bg-white/4"
                                         >
                                             <div className="min-w-0">
                                                 <p className="truncate font-medium">

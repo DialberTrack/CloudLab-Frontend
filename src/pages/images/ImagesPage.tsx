@@ -65,9 +65,9 @@ export function ImagesPage() {
                                             setModalError('');
                                         }}
                                     >
-                                    {item.is_active
-                                        ? 'Usar en workspace'
-                                        : 'Usar como administrador'}
+                                        {item.is_active
+                                            ? 'Usar en workspace'
+                                            : 'Usar como administrador'}
                                     </button>
                                 ) : (
                                     <span
@@ -123,9 +123,7 @@ export function ImagesPage() {
                             onClick={async () => {
                                 const normalizedName = workspaceName.trim();
                                 if (normalizedName.length < 3) {
-                                    setModalError(
-                                        'El nombre debe tener al menos 3 caracteres.'
-                                    );
+                                    setModalError('El nombre debe tener al menos 3 caracteres.');
                                     return;
                                 }
                                 setCreating(true);
