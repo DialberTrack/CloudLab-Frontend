@@ -33,6 +33,80 @@ El backend y el frontend no comparten código ni dependencias. El único contrat
 
 ---
 
+## Paso 0. Verificar que los puertos estén libres
+
+**Haz esto antes de instalar nada.** CloudLab necesita estos puertos en el servidor:
+
+| Puerto | Lo usa        | Obligatorio                            |
+| ------ | ------------- | -------------------------------------- |
+| 80     | Nginx (HTTP)  | Sí                                     |
+| 443    | Nginx (HTTPS) | Solo si configuras HTTPS (sección 9.3) |
+| 8000   | Backend (API) | Sí                                     |
+| 3306   | MariaDB       | Sí                                     |
+| 6379   | Redis         | Sí                                     |
+
+Los escritorios de los usuarios (workspaces) también publican puertos, pero los asigna el backend de forma dinámica en `127.0.0.1`; no hay que revisarlos ahora.
+
+### Comprobar si están ocupados
+
+```bash
+for p in 80 443 8000 3306 6379; do
+  if sudo ss -tlnH "sport = :$p" | grep -q .; then
+    echo "OCUPADO: $p"; sudo ss -tlnp "sport = :$p"
+  else
+    echo "libre:   $p"
+  fi
+done
+```
+
+- Si todos dicen `libre`, continúa con la siguiente sección.
+- Si alguno dice `OCUPADO`, la columna final de la salida (`users:(("nombre",pid=...))`) indica qué programa lo usa. Resuélvelo con **una** de las opciones siguientes.
+
+> Si estás **reinstalando o actualizando** CloudLab, es normal que sus propios servicios (Nginx, PM2 `cloudlab-api`, contenedores `mariadb` y `redis`) ya ocupen esos puertos. En ese caso no hay conflicto.
+
+### Opción 1: detener el servicio que usa el puerto
+
+Hazlo solo si no necesitas ese servicio. Identifica el programa y deténlo:
+
+```bash
+sudo ss -tlnp "sport = :80"                 # muestra el proceso que lo usa
+sudo systemctl stop <servicio>              # detiene el servicio ahora
+sudo systemctl disable <servicio>           # evita que arranque al reiniciar
+```
+
+Casos comunes:
+
+| Puerto     | Causa habitual                                     | Nombre del servicio                                            |
+| ---------- | -------------------------------------------------- | -------------------------------------------------------------- |
+| 80 / 443   | Apache u otro servidor web                         | `apache2` (Debian/Ubuntu) o `httpd` (Fedora/RHEL)              |
+| 3306       | MariaDB o MySQL instalados directamente en el host | `mariadb` o `mysql`                                            |
+| 6379       | Redis instalado directamente en el host            | `redis-server` (Debian/Ubuntu) o `redis` (Fedora/RHEL/Arch)    |
+| cualquiera | Un contenedor Docker                               | `docker ps` para verlo y `docker stop <nombre>` para detenerlo |
+
+Después de detenerlo, vuelve a ejecutar el comprobador de arriba.
+
+### Opción 2: cambiar el puerto de CloudLab
+
+Si no puedes detener el servicio que lo ocupa, usa otro puerto para CloudLab. Elige uno libre (por ejemplo `8080`, `8001`, `3307`, `6380`; confírmalo con el comprobador) y cámbialo **en todos** los lugares de la tabla. Después, en cada comando de la guía que mencione el puerto original, usa el nuevo.
+
+| Puerto         | Dónde cambiarlo                                                                                                                                                                                                                                                                          | Sección de esta guía                       |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 8000 (API)     | `.env`: `APP_PORT=<nuevo>`. Nginx: `server 127.0.0.1:<nuevo>;` en el bloque `upstream cloudlab_api`.                                                                                                                                                                                     | 3.2 (`.env`) y 9.2 (Nginx)                 |
+| 6379 (Redis)   | `.env`: `REDIS_URL=redis://127.0.0.1:<nuevo>`. `docker-compose.yml`: en el servicio `redis`, cambia solo la parte izquierda de `ports:` (por ejemplo `127.0.0.1:6380:6379`).                                                                                                             | 3.2 (`.env`) y 4                           |
+| 3306 (MariaDB) | `docker-compose.yml`: en el servicio `mariadb`, cambia solo la parte izquierda de `ports:` (por ejemplo `127.0.0.1:3307:3306`). `.env`: ajusta el puerto de la base de datos (revisa en `.env.example` si el nombre es `DB_PORT`; si no existe, agrégalo solo si el backend lo soporta). | 3.2 (`.env`) y 4                           |
+| 80 (HTTP)      | Nginx: `listen 80;` → `listen <nuevo>;`. `.env`: `FRONTEND_URLS` debe incluir el puerto (por ejemplo `http://192.168.1.50:8080`). Firewall: abre el nuevo puerto en lugar del 80.                                                                                                        | 3.2 (`.env`), 9.2 (Nginx) y 9.4 (firewall) |
+| 443 (HTTPS)    | Nginx: `listen <nuevo> ssl;`. `.env`: `FRONTEND_URLS` con `https://...:<nuevo>`. Firewall: abre el nuevo puerto.                                                                                                                                                                         | 3.2, 9.3 y 9.4                             |
+
+Notas:
+
+- En `docker-compose.yml`, el formato de `ports:` es `<puerto del host>:<puerto del contenedor>`. Cambia **solo el de la izquierda**; el de la derecha es interno del contenedor y no debe modificarse.
+- La edición del `.env` se hace en el paso 3 (sección 3.2); por eso esa sección te recuerda aplicar aquí los puertos nuevos.
+- Los cambios en el `.env` solo surten efecto al reiniciar la API: `pm2 restart cloudlab-api --update-env`.
+- Los cambios en `docker-compose.yml` se aplican con `docker compose up -d --wait mariadb redis`.
+- Si tu base de datos o Redis ya tienen datos, no uses `docker compose down -v`; cambiar el puerto no requiere borrar volúmenes.
+
+---
+
 ## Despliegue local: ajusta los valores a tu IP
 
 Aplica si instalas CloudLab en una red local (máquina virtual, servidor casero, laboratorio) y no tienes un dominio público. En ese caso, el valor `cloudlab.local` que aparece en esta guía debe reemplazarse por lo que realmente escribirás en el navegador. Hazlo **antes** de las secciones 3 y 9.
@@ -234,6 +308,7 @@ MAX_REFRESH_TOKENS_PER_USER=5
 Edita el archivo con `nano .env` (o tu editor de preferencia) y ten en cuenta:
 
 - `DB_NAME`, `DB_USER`, `DB_PASSWORD` y `DB_ROOT_PASSWORD` son los mismos que usa Docker Compose: lo lee automáticamente para sustituir variables en `docker-compose.yml`.
+- **Puertos:** si en el Paso 0 cambiaste algún puerto de CloudLab, este es el momento de reflejarlo en el `.env`: `APP_PORT` (API), `REDIS_URL` (Redis), el puerto de la base de datos si aplica, y `FRONTEND_URLS` si cambiaste el puerto de Nginx. El resto de cambios (Nginx y `docker-compose.yml`) están en la tabla del Paso 0.
 - `JWT_SECRET` y `JWT_REFRESH_SECRET` deben ser **distintos entre sí**, largos y aleatorios. Puedes generarlos con `openssl rand -hex 48`. Guárdalos fuera del repositorio.
 - `FRONTEND_URLS` debe incluir **todos** los orígenes reales del frontend, separados por comas (con esquema y sin `/` final). Ejemplo: `https://cloudlab.midominio.com,https://www.midominio.com`. **Despliegue local:** cámbialo por la IP o el nombre con el que accederás (ver "Despliegue local" al inicio), por ejemplo `http://192.168.1.50`.
 - Evita caracteres especiales (`$`, `#`, espacios, comillas) en las contraseñas, o ponlas entre comillas simples, porque el archivo se carga con `source` en el paso 3.3.
@@ -760,6 +835,7 @@ Edita el archivo instalado con `sudo nano /etc/nginx/sites-available/cloudlab` (
 1. `server_name`: pon tu dominio real (si el repositorio trae `server_name _;`, reemplázalo). **Despliegue local:** usa la IP del servidor (obtenida con `ip -4 -br addr`) o el nombre que registraste en el archivo `hosts` de tus equipos; puedes poner varios separados por espacio, por ejemplo `server_name 192.168.1.50 cloudlab.local;`.
 2. `root`: debe ser `/var/www/cloudlab/frontend/dist` (o tu ruta real).
 3. Si usas otro dominio para el frontend, actualiza también `FRONTEND_URLS` en `.env` y reinicia la API (`pm2 restart cloudlab-api --update-env`).
+4. Si cambiaste puertos en el Paso 0: ajusta `listen` (80/443) y el puerto del bloque `upstream cloudlab_api` (API), según la tabla del Paso 0.
 
 Valida y activa Nginx:
 
@@ -855,6 +931,7 @@ Marca cada punto antes de dar el despliegue por terminado:
 - [ ] Si usas UFW: las reglas de `br-cloudlab` están en `before.rules` y `after.rules`, y `sudo ufw status` muestra los puertos 80 (y 443) permitidos.
 - [ ] Si no usas UFW: el puerto 80 (y 443) está abierto en el firewall de tu sistema o proveedor.
 - [ ] El backend escucha solo en `127.0.0.1:8000` y PM2 está guardado (`pm2 save`, `pm2 startup`).
+- [ ] Se verificaron los puertos en el Paso 0 y, si hubo conflictos, se resolvieron (servicio detenido o puerto cambiado en `.env`, Nginx, `docker-compose.yml` y firewall).
 - [ ] `frontend/dist/index.html` existe.
 - [ ] Nginx usa el `root` y `server_name` correctos, y `nginx -t` pasa.
 - [ ] `/api/` responde mediante el proxy de Nginx.
