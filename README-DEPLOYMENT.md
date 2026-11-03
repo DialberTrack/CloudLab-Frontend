@@ -1,73 +1,29 @@
-# CloudLab — Despliegue actual
+# CloudLab — Guía de despliegue en producción
 
-Esta guía describe la instalación de producción de CloudLab usando dos
-repositorios independientes:
+Esta guía instala CloudLab en un servidor Linux limpio usando dos repositorios independientes.
 
-- Backend REST ejecutándose en `127.0.0.1:8000`.
-- Frontend compilado como archivos estáticos en `frontend/dist`.
-- Nginx sirviendo el frontend y haciendo proxy de `/api/` y `/workspace/`.
-- MariaDB y Redis gestionados con Docker Compose.
-- Contenedores de usuario en `cloudlab-network-aislada`.
+## Arquitectura final
 
-El backend y el frontend no comparten código ni dependencias. El único contrato
-entre ambos es HTTP.
+| Componente                        | Dónde corre       | Puerto / ruta                     |
+| --------------------------------- | ----------------- | --------------------------------- |
+| Backend REST (Node.js, PM2)       | Host              | `127.0.0.1:8000`                  |
+| Frontend (archivos estáticos)     | Servido por Nginx | `/var/www/cloudlab/frontend/dist` |
+| Nginx                             | Host              | `80` (y `443` si usas HTTPS)      |
+| MariaDB                           | Docker Compose    | `127.0.0.1:3306`                  |
+| Redis                             | Docker Compose    | `127.0.0.1:6379`                  |
+| Contenedores de usuario (KasmVNC) | Docker            | red `cloudlab-network-aislada`    |
 
-## 1. Requisitos del servidor
+Nginx es el único punto público: sirve el frontend y hace proxy de `/api/` (al backend) y `/workspace/` (a los escritorios de usuario).
 
-Esta guía parte de un servidor limpio y de un usuario normal con acceso a
-`sudo` (por ejemplo, `dialbertrack`). No ejecutes toda la aplicación como
-`root`. Verifica los comandos según el sistema operativo elegido.
+El backend y el frontend no comparten código ni dependencias. El único contrato entre ambos es HTTP.
 
-### 1.1 Paquetes base
+## Cómo usar esta guía
 
-Instala con el gestor de paquetes de tu sistema `ca-certificates`, `curl`,
-`git`, `nginx` y `unzip`.
-
-### 1.2 Node.js y pnpm
-
-Node.js 20 o superior y pnpm 12 son compatibles. Una instalación sencilla para
-Bash es `fnm`; no es obligatorio usarlo:
-
-```bash
-curl -fsSL https://fnm.vercel.app/install | bash
-source ~/.bashrc
-fnm install --lts
-fnm default lts-latest
-node --version
-
-curl -fsSL https://get.pnpm.io/install.sh | sh -
-source ~/.bashrc
-pnpm --version
-
-pnpm setup
-source ~/.bashrc
-```
-
-Si `fnm` no se usa, instala Node.js con el método aprobado por tu
-infraestructura. Verifica que `node --version` sea al menos `20` y que
-`pnpm --version` sea `12`.
-
-### 1.3 Docker y permisos del usuario
-
-Instala Docker Engine y Docker Compose siguiendo la guía oficial correspondiente
-al sistema operativo que elijas:
-
-<https://docs.docker.com/engine/install/>
-
-El cliente Docker necesita acceso a `/var/run/docker.sock`. Agrega el usuario
-de despliegue al grupo `docker` y abre una nueva sesión (o usa `newgrp`):
-
-```bash
-sudo usermod -aG docker "$USER"
-newgrp docker
-docker info
-docker compose version
-```
-
-Si `docker info` todavía muestra `permission denied`, cierra la sesión SSH y
-vuelve a entrar. No cambies los permisos del socket con `chmod 666`.
-
-Ejemplo de rutas usadas en este documento:
+- Sigue las secciones **en orden**. Cada una termina con un bloque **Verificación**: no pases a la siguiente si falla.
+- Ejecuta todo como un **usuario normal con `sudo`** (ejemplo: `dialbertrack`). **Nunca** ejecutes la aplicación como `root`.
+- Los valores entre `<...>` son marcadores: reemplázalos por valores reales.
+- **Editar archivos:** donde la guía diga "edita" un archivo, usa `nano <archivo>` (por ejemplo `nano .env`, o `sudo nano <archivo>` si está en `/etc`) o tu editor de preferencia (`vim`, `nvim`, `code`, etc.). En `nano`: `Ctrl+O` y `Enter` guardan; `Ctrl+X` sale.
+- Rutas usadas (puedes cambiarlas, pero deben coincidir con `root` y `proxy_pass` de Nginx):
 
 ```text
 /var/www/cloudlab/backend
@@ -75,13 +31,149 @@ Ejemplo de rutas usadas en este documento:
 /var/www/cloudlab/frontend/dist
 ```
 
-Puedes usar otras rutas, pero deben coincidir con `root` y `proxy_pass` de Nginx.
+---
+
+## Despliegue local: ajusta los valores a tu IP
+
+Aplica si instalas CloudLab en una red local (máquina virtual, servidor casero, laboratorio) y no tienes un dominio público. En ese caso, el valor `cloudlab.local` que aparece en esta guía debe reemplazarse por lo que realmente escribirás en el navegador. Hazlo **antes** de las secciones 3 y 9.
+
+### Paso 1. Averiguar la IP del servidor
+
+```bash
+ip -4 -br addr
+```
+
+(también sirven `ip a` o `hostname -I`). Ejemplo de salida:
+
+```text
+lo               UNKNOWN        127.0.0.1/8
+enp3s0           UP             192.168.1.50/24
+docker0          DOWN           172.17.0.1/16
+br-cloudlab      UP             172.30.0.1/16
+```
+
+Usa la IP de la interfaz de red real (`enp3s0`, `eth0`, `ens18`, `wlan0`, etc.; en el ejemplo, `192.168.1.50`). **Ignora** `lo` (`127.0.0.1`), `docker0`, `br-*` y `veth*`: son redes internas de Docker.
+
+### Paso 2. Elegir cómo accederás
+
+| Acceso                          | `FRONTEND_URLS` (en `.env`)                 | `server_name` (en Nginx)                              |
+| ------------------------------- | ------------------------------------------- | ----------------------------------------------------- |
+| Solo desde el propio servidor   | `http://localhost`                          | `localhost`                                           |
+| Desde otros equipos, por IP     | `http://192.168.1.50`                       | `192.168.1.50`                                        |
+| Desde otros equipos, por nombre | `http://cloudlab.local`                     | `cloudlab.local`                                      |
+| Varias opciones a la vez        | `http://192.168.1.50,http://cloudlab.local` | `192.168.1.50 cloudlab.local` (separados por espacio) |
+
+Reglas:
+
+- `FRONTEND_URLS` debe coincidir **exactamente** con lo que se escribe en la barra del navegador: esquema (`http://`), host y puerto. Sin `/` final. Si Nginx escucha en un puerto distinto del 80, inclúyelo (por ejemplo `http://192.168.1.50:8080`).
+- En local se usa `http://`; si en algún momento configuras HTTPS, cambia a `https://`.
+- Algunas funciones del navegador (por ejemplo el portapapeles dentro del escritorio remoto) pueden requerir HTTPS o `localhost`. Si accedes por IP con `http://` y alguna no funciona, es probable que sea por eso.
+
+### Paso 3. Aplicar los valores
+
+Usa la IP que obtuviste en el paso 1 en estos tres lugares:
+
+1. `.env` del backend (sección 3): `nano /var/www/cloudlab/backend/.env` y ajusta `FRONTEND_URLS`.
+2. Configuración de Nginx (sección 9): `sudo nano /etc/nginx/sites-available/cloudlab` y ajusta `server_name`.
+3. Reinicia para que los cambios surtan efecto:
+
+```bash
+pm2 restart cloudlab-api --update-env
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Paso 4. Si accedes por nombre (`cloudlab.local`), regístralo en cada equipo cliente
+
+Un nombre que no existe en un DNS no se resuelve solo. En **cada equipo desde el que entres**, añade una línea al archivo `hosts` (con la IP del servidor):
+
+```text
+192.168.1.50  cloudlab.local
+```
+
+- Linux / macOS: `sudo nano /etc/hosts`
+- Windows (editor abierto como administrador): `C:\Windows\System32\drivers\etc\hosts`
+
+### Recomendaciones
+
+- Asigna una **IP fija** al servidor (en el router, como reserva DHCP, o en la configuración de red del sistema). Si la IP cambia, el acceso por IP deja de funcionar y debes repetir el paso 3 con la nueva.
+- Recuerda abrir el puerto 80 en el firewall (sección 9.4).
+
+**Verificación** desde otro equipo de la red:
+
+```bash
+curl -I http://192.168.1.50/          # o http://cloudlab.local/ si lo registraste en hosts
+```
+
+---
+
+## 1. Requisitos del servidor
+
+### 1.1 Paquetes base
+
+Instala `ca-certificates`, `curl`, `git`, `nginx` y `unzip` con el gestor de tu distribución:
+
+| Distribución                               | Comando                                                                       |
+| ------------------------------------------ | ----------------------------------------------------------------------------- |
+| Debian / Ubuntu / Linux Mint (APT)         | `sudo apt update && sudo apt install -y ca-certificates curl git nginx unzip` |
+| Fedora / RHEL 8+ / Rocky / AlmaLinux (DNF) | `sudo dnf install -y ca-certificates curl git nginx unzip`                    |
+| CentOS / RHEL antiguos (YUM)               | `sudo yum install -y ca-certificates curl git nginx unzip`                    |
+| Arch / Manjaro / EndeavourOS (Pacman)      | `sudo pacman -Syu --needed ca-certificates curl git nginx unzip`              |
+
+> Nota: esta guía usa rutas de Debian/Ubuntu para Nginx (`sites-available` / `sites-enabled`). En Fedora, RHEL y Arch la configuración va en `/etc/nginx/conf.d/cloudlab.conf` (ver sección 9).
+
+**Verificación:**
+
+```bash
+nginx -v && git --version && curl --version | head -n 1
+```
+
+### 1.2 Node.js y pnpm
+
+Se requiere **Node.js 20 o superior** y **pnpm 12**. Una opción sencilla es `fnm` (no es obligatorio):
+
+```bash
+curl -fsSL https://fnm.vercel.app/install | bash
+source ~/.bashrc
+fnm install --lts
+fnm default lts-latest
+
+npm install -g pnpm
+```
+
+Si no usas `fnm`, instala Node.js con el método aprobado por tu infraestructura.
+
+**Verificación** (`node` debe ser `v20` o mayor y `pnpm` debe empezar con `12`):
+
+```bash
+node --version
+pnpm --version
+```
+
+### 1.3 Docker y permisos del usuario
+
+Instala Docker Engine y Docker Compose siguiendo la guía oficial de tu sistema: <https://docs.docker.com/engine/install/>
+
+Da acceso al socket de Docker al usuario de despliegue y abre una sesión nueva del grupo:
+
+```bash
+sudo usermod -aG docker "$USER"
+newgrp docker
+```
+
+**Verificación:**
+
+```bash
+docker info
+docker compose version
+```
+
+Si `docker info` muestra `permission denied`, cierra la sesión SSH y vuelve a entrar. **No** uses `chmod 666` en el socket.
+
+---
 
 ## 2. Obtener los repositorios
 
-`/var/www` normalmente pertenece a `root`, si intentas `mkdir -p
-/var/www/cloudlab` falla para un usuario normal. Crea la ruta con `sudo` y
-entrega su propiedad al usuario de despliegue antes de clonar:
+`/var/www` pertenece a `root`, así que `mkdir` sin `sudo` falla. Crea la ruta con `sudo` y entrégala al usuario de despliegue **antes** de clonar:
 
 ```bash
 sudo install -d -o "$USER" -g "$(id -gn)" /var/www/cloudlab
@@ -90,12 +182,22 @@ git clone https://github.com/DialberTrack/CloudLab-API backend
 git clone https://github.com/DialberTrack/CloudLab-Frontend frontend
 ```
 
-Después de este paso, no uses `sudo` para `git`, `pnpm` ni para editar los
-repositorios.
+Reglas desde este punto:
 
-No instales el frontend desde el directorio del backend ni al revés.
+- No uses `sudo` con `git`, `pnpm` ni para editar los repositorios.
+- Instala cada proyecto **desde su propio directorio**; nunca el frontend desde `backend/` ni al revés.
+
+**Verificación:**
+
+```bash
+ls /var/www/cloudlab        # debe mostrar: backend  frontend
+```
+
+---
 
 ## 3. Configurar el backend
+
+### 3.1 Instalar dependencias y crear `.env`
 
 ```bash
 cd /var/www/cloudlab/backend
@@ -103,12 +205,7 @@ pnpm install --frozen-lockfile
 cp .env.example .env
 ```
 
-Edita `.env` y conserva los mismos valores de `DB_NAME`, `DB_USER`,
-`DB_PASSWORD` y `DB_ROOT_PASSWORD` que usará Docker Compose. Compose lee
-automáticamente este archivo para sustituir las variables del
-`docker-compose.yml`.
-
-Si no existe `.env.example`, crea `.env` con valores reales y secretos únicos:
+Si `.env.example` no existe, crea `.env` manualmente con este contenido (reemplaza todos los `<...>`):
 
 ```dotenv
 NODE_ENV=production
@@ -132,53 +229,63 @@ JWT_REFRESH_EXPIRES_IN=7d
 MAX_REFRESH_TOKENS_PER_USER=5
 ```
 
-Genera y almacena los secretos fuera del repositorio. `FRONTEND_URLS` debe
-contener todos los orígenes reales del frontend, separados por comas.
+### 3.2 Reglas importantes del `.env`
+
+Edita el archivo con `nano .env` (o tu editor de preferencia) y ten en cuenta:
+
+- `DB_NAME`, `DB_USER`, `DB_PASSWORD` y `DB_ROOT_PASSWORD` son los mismos que usa Docker Compose: lo lee automáticamente para sustituir variables en `docker-compose.yml`.
+- `JWT_SECRET` y `JWT_REFRESH_SECRET` deben ser **distintos entre sí**, largos y aleatorios. Puedes generarlos con `openssl rand -hex 48`. Guárdalos fuera del repositorio.
+- `FRONTEND_URLS` debe incluir **todos** los orígenes reales del frontend, separados por comas (con esquema y sin `/` final). Ejemplo: `https://cloudlab.midominio.com,https://www.midominio.com`. **Despliegue local:** cámbialo por la IP o el nombre con el que accederás (ver "Despliegue local" al inicio), por ejemplo `http://192.168.1.50`.
+- Evita caracteres especiales (`$`, `#`, espacios, comillas) en las contraseñas, o ponlas entre comillas simples, porque el archivo se carga con `source` en el paso 3.3.
+
 Protege el archivo:
 
 ```bash
 chmod 600 .env
 ```
 
-Carga las variables en la sesión actual para que también estén disponibles en
-los comandos `docker compose exec` de esta guía:
+### 3.3 Cargar las variables en la sesión actual
+
+Los comandos `docker compose exec` de esta guía usan `$DB_USER`, `$DB_PASSWORD`, etc. Cárgalas en **cada terminal nueva** que uses:
 
 ```bash
+cd /var/www/cloudlab/backend
 set -a
 . ./.env
 set +a
 ```
 
-## 4. Iniciar MariaDB y Redis
+**Verificación:**
 
-Desde el repositorio backend:
+```bash
+echo "$DB_NAME"      # debe imprimir: cloudlab
+stat -c '%a' .env     # debe imprimir: 600
+```
+
+---
+
+## 4. Iniciar MariaDB y Redis
 
 ```bash
 cd /var/www/cloudlab/backend
 docker compose up -d --wait mariadb redis
+docker compose ps
 docker compose logs --tail=50 mariadb redis
 ```
 
-El comando espera a que los healthchecks de MariaDB y Redis pasen. Comprueba el
-estado final con `docker compose ps`.
+`--wait` espera a que pasen los healthchecks de ambos servicios.
 
-Los servicios solo se publican en `127.0.0.1`:
+Ambos se publican solo en `127.0.0.1` (MariaDB `:3306`, Redis `:6379`). Los volúmenes `mariadb_data` y `redis_data` **deben conservarse**.
 
-- MariaDB: `127.0.0.1:3306`.
-- Redis: `127.0.0.1:6379`.
+**Verificación:** `docker compose ps` debe mostrar `mariadb` y `redis` en estado `healthy`.
 
-Los volúmenes `mariadb_data` y `redis_data` deben conservarse. El archivo
-`database-schema.sql` se ejecuta solamente al inicializar MariaDB por primera
-vez.
+---
 
 ## 5. Crear y verificar las tablas
 
-El archivo [`database-schema.sql`](database-schema.sql) crea las tablas
-`users`, `container_images` y `workspaces`, junto con sus índices, claves únicas
-y relaciones. Docker lo ejecuta automáticamente cuando el volumen
-`mariadb_data` se crea por primera vez.
+El archivo [`database-schema.sql`](database-schema.sql) crea las tablas `users`, `container_images` y `workspaces` con sus índices, claves únicas y relaciones. Docker lo ejecuta **automáticamente solo la primera vez** que se crea el volumen `mariadb_data`.
 
-Verifica que las tablas existan antes de compilar o arrancar el backend:
+### 5.1 Verificar las tablas
 
 ```bash
 cd /var/www/cloudlab/backend
@@ -187,7 +294,7 @@ docker compose exec -T mariadb mariadb \
     -e 'SHOW TABLES;'
 ```
 
-La salida debe incluir:
+La salida debe incluir exactamente estas tres tablas:
 
 ```text
 container_images
@@ -195,10 +302,9 @@ users
 workspaces
 ```
 
-### Crear el administrador inicial
+### 5.2 Crear el administrador inicial
 
-Después de verificar las tablas, crea el administrador inicial. El hash está
-generado con Argon2id y `INSERT IGNORE` evita duplicarlo si el correo ya existe:
+El hash está generado con Argon2id. `INSERT IGNORE` evita duplicar el usuario si el correo ya existe.
 
 ```bash
 docker compose exec -T mariadb mariadb \
@@ -218,29 +324,28 @@ SQL
 Credenciales iniciales:
 
 ```text
-Email: admin@cloudlab.local
+Email:      admin@cloudlab.local
 Contraseña: cambiarcontraseña
-Rol: admin
+Rol:        admin
 ```
 
-Inicia sesión con estas credenciales y cambia la contraseña inmediatamente.
-No reutilices la contraseña inicial en otro entorno.
+> **Obligatorio:** inicia sesión con estas credenciales y cambia la contraseña de inmediato. Nunca la reutilices en otro entorno.
 
-El catálogo de imágenes puede cargarse después de crear las tablas. Por ejemplo:
+### 5.3 Cargar el catálogo de imágenes
+
+Se puede hacer después de crear las tablas. Ejemplo con Ubuntu:
 
 ```bash
 docker compose exec -T mariadb mariadb \
-    -u"$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" \
-    <<'SQL'
+    -u"$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" <<'SQL'
 INSERT INTO container_images (id, name, image, description, sort_order)
 VALUES (UUID(), 'Ubuntu', 'ubuntu:24.04', 'Ubuntu 24.04', 1);
 SQL
 ```
 
-### Problemas durante la creación o verificación
+### 5.4 Solución de problemas de esta sección
 
-Si el volumen ya existía y las tablas no aparecen, aplica el esquema
-manualmente. Este comando es idempotente y no borra datos:
+**Las tablas no aparecen (el volumen ya existía).** Aplica el esquema manualmente. Es idempotente y no borra datos:
 
 ```bash
 docker compose exec -T mariadb mariadb \
@@ -248,13 +353,7 @@ docker compose exec -T mariadb mariadb \
     < database-schema.sql
 ```
 
-Si aparece `Access denied for user 'cloudlab'`, el contenedor está funcionando,
-pero `DB_PASSWORD` no coincide con la contraseña guardada en MariaDB. Las
-variables `MYSQL_USER` y `MYSQL_PASSWORD` solo crean el usuario durante la
-primera inicialización del volumen; editar `.env` después no cambia una cuenta
-existente.
-
-Confirma que cargaste el `.env` correcto:
+**`Access denied for user 'cloudlab'`.** El contenedor funciona, pero `DB_PASSWORD` no coincide con la contraseña guardada en MariaDB. `MYSQL_USER` y `MYSQL_PASSWORD` solo crean el usuario en la **primera** inicialización del volumen; editar `.env` después no cambia una cuenta existente. Primero confirma que cargaste el `.env` correcto:
 
 ```bash
 cd /var/www/cloudlab/backend
@@ -264,8 +363,7 @@ set +a
 docker compose up -d --wait mariadb redis
 ```
 
-Si necesitas conservar los datos, cambia la contraseña usando la contraseña
-root original:
+Si el error persiste y quieres conservar los datos, cambia la contraseña usando la contraseña **root original** (si no la conoces, no ejecutes esto):
 
 ```bash
 docker compose exec -T mariadb mariadb \
@@ -275,22 +373,16 @@ FLUSH PRIVILEGES;
 SQL
 ```
 
-No ejecutes este comando si no conoces la contraseña root original. No
-compartas contraseñas en el repositorio o en capturas de pantalla.
-
-Si es una instalación nueva y no hay datos que conservar, puedes reinicializar
-los volúmenes:
+**Instalación nueva sin datos que conservar:** puedes reinicializar los volúmenes.
 
 ```bash
 docker compose down -v
 docker compose up -d --wait mariadb redis
 ```
 
-`docker compose down -v` elimina permanentemente los datos de MariaDB y Redis;
-no lo uses en una instalación existente.
+> **Peligro:** `docker compose down -v` elimina de forma permanente los datos de MariaDB y Redis. No lo uses en una instalación existente.
 
-Si aparece `errno: 150`, revisa que las tablas existentes tengan el mismo tipo
-`uuid` en las columnas relacionadas:
+**`errno: 150` (error de clave foránea).** Las columnas relacionadas deben tener el mismo tipo `uuid` en las tablas existentes. Revísalo con:
 
 ```bash
 docker compose exec -T mariadb mariadb \
@@ -298,42 +390,182 @@ docker compose exec -T mariadb mariadb \
     -e 'SHOW CREATE TABLE users\G SHOW CREATE TABLE container_images\G'
 ```
 
-En una instalación nueva, reinicializa los volúmenes. En una instalación
-existente, conserva una copia de seguridad y corrige la migración sin eliminar
-datos.
+En una instalación nueva, reinicializa los volúmenes. En una existente, haz una copia de seguridad y corrige la migración sin borrar datos.
+
+No compartas contraseñas en el repositorio ni en capturas de pantalla.
+
+---
 
 ## 6. Crear la red aislada de workspaces
 
-Créala una sola vez:
+Créala **una sola vez** (el comando es seguro de repetir). La opción `-o com.docker.network.bridge.name=br-cloudlab` fija un nombre estable a la interfaz de red; las reglas de UFW de la sección 6.1 dependen de ese nombre (`br-cloudlab`):
 
 ```bash
 docker network inspect cloudlab-network-aislada >/dev/null 2>&1 || \
-docker network create --driver bridge --subnet 172.30.0.0/16 cloudlab-network-aislada
+docker network create --driver bridge --subnet 172.30.0.0/16 \
+    -o com.docker.network.bridge.name=br-cloudlab \
+    cloudlab-network-aislada
 ```
 
-El backend verifica que esta red exista antes de crear un workspace. No conectes
-esta red a MariaDB, Redis ni a otros servicios internos.
-
-### Firewall obligatorio
-
-Docker puede insertar reglas que permitan acceso a redes privadas. Configura el
-firewall del host en `DOCKER-USER` para permitir solo DNS, HTTP y HTTPS de
-salida, y bloquear LAN, host, gateway Docker y otros contenedores. Aplica reglas
-equivalentes para IPv6 o deshabilita IPv6 de forma controlada.
-
-La política debe comprobarse desde un workspace:
+**Verificación:**
 
 ```bash
-curl -I https://example.com
-curl --connect-timeout 3 http://192.168.1.1
-curl --connect-timeout 3 http://172.30.0.1
+ip link show br-cloudlab     # debe existir la interfaz
 ```
 
-El primer comando debe funcionar; los dos últimos deben fallar.
+> Si la red ya existía sin ese nombre, el nombre real de la interfaz será `br-<id>`. En una instalación sin workspaces activos puedes eliminarla (`docker network rm cloudlab-network-aislada`) y crearla de nuevo con el comando anterior.
 
-## 7. Compilar y publicar el frontend
+El backend comprueba que esta red exista antes de crear un workspace. **No** conectes esta red a MariaDB, Redis ni a otros servicios internos. No montes `docker.sock` en ningún contenedor de usuario.
 
-Ejecuta estos comandos dentro del repositorio frontend:
+### 6.1 Firewall (obligatorio)
+
+Docker inserta reglas que pueden permitir acceso a redes privadas. Configura el firewall del host para que los contenedores de `172.30.0.0/16` puedan salir **solo** por DNS (53), HTTP (80) y HTTPS (443) hacia Internet, y no alcancen la LAN, el host, el gateway Docker ni otros contenedores.
+
+Primero averigua si tu servidor usa UFW:
+
+```bash
+sudo ufw status
+```
+
+- Si muestra `Status: active` → usa la **Opción B (UFW)** más abajo y **no** mezcles reglas manuales de `iptables`.
+- Si muestra `Status: inactive` o el comando no existe → usa la **Opción A (iptables)**. Opcionalmente, puedes habilitar UFW (ver el apartado siguiente) y entonces usar la **Opción B**.
+
+#### Opcional: habilitar UFW
+
+No es obligatorio. Si prefieres administrar el firewall con UFW, instálalo (si no existe), permite SSH y el puerto 80, y habilítalo. **Permite SSH antes de ejecutar `ufw enable`**; de lo contrario perderás el acceso remoto al servidor. Si tu SSH usa otro puerto, reemplaza `22`.
+
+```bash
+sudo apt install -y ufw        # solo si el comando no existe (Debian/Ubuntu)
+sudo ufw allow 22/tcp          # SSH
+sudo ufw allow 80/tcp          # HTTP (Nginx)
+sudo ufw enable
+sudo ufw status verbose
+```
+
+Solo se abre el puerto 80. El 443 se abre únicamente si más adelante configuras HTTPS (sección 9.3). Después de habilitar UFW, continúa con la **Opción B**. Si no quieres usar UFW, sigue con la Opción A.
+
+#### Opción A: iptables (sin UFW)
+
+Ejemplo con `iptables` (usa `-I`, por eso las reglas se escriben en orden inverso al de evaluación; adáptalo a tu firewall y valídalo con las pruebas de 6.2):
+
+```bash
+SUBNET=172.30.0.0/16
+
+# Salida desde los workspaces (cadena DOCKER-USER). Orden final de evaluación:
+# 1) DNS  2) bloquear redes privadas  3) permitir 80/443  4) bloquear el resto
+sudo iptables -I DOCKER-USER -s $SUBNET -j DROP
+sudo iptables -I DOCKER-USER -s $SUBNET -p tcp -m multiport --dports 80,443 -j ACCEPT
+sudo iptables -I DOCKER-USER -s $SUBNET -d 10.0.0.0/8     -j DROP
+sudo iptables -I DOCKER-USER -s $SUBNET -d 172.16.0.0/12  -j DROP
+sudo iptables -I DOCKER-USER -s $SUBNET -d 192.168.0.0/16 -j DROP
+sudo iptables -I DOCKER-USER -s $SUBNET -p tcp --dport 53 -j ACCEPT
+sudo iptables -I DOCKER-USER -s $SUBNET -p udp --dport 53 -j ACCEPT
+
+# Tráfico de los workspaces hacia el propio host (cadena INPUT): solo respuestas
+sudo iptables -I INPUT -s $SUBNET -j DROP
+sudo iptables -I INPUT -s $SUBNET -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+```
+
+Aplica reglas equivalentes con `ip6tables`, o deshabilita IPv6 de forma controlada. Para que las reglas persistan tras reiniciar, usa el mecanismo de tu distribución (por ejemplo `iptables-persistent` en Debian/Ubuntu).
+
+#### Opción B: UFW activo
+
+UFW no controla por sí solo el tráfico de los contenedores Docker, así que hay que añadir reglas propias en dos archivos de `/etc/ufw/`. Ambos usan la interfaz `br-cloudlab` creada en la sección 6.
+
+**Paso 1. Haz una copia de seguridad:**
+
+```bash
+sudo cp /etc/ufw/before.rules /etc/ufw/before.rules.bak
+sudo cp /etc/ufw/after.rules  /etc/ufw/after.rules.bak
+```
+
+**Paso 2. Edita `/etc/ufw/before.rules`** (`sudo nano /etc/ufw/before.rules`). Estas reglas controlan el tráfico de los workspaces hacia el propio servidor: solo permiten respuestas a conexiones ya iniciadas por el host (por ejemplo, las de Nginx) y descartan todo lo demás. Pégalas justo después de la línea `# End required lines` y antes de cualquier otra regla:
+
+```text
+# Don't delete these required lines, otherwise there will be errors
+*filter
+:ufw-before-input - [0:0]
+:ufw-before-output - [0:0]
+:ufw-before-forward - [0:0]
+:ufw-not-local - [0:0]
+# End required lines
+
+# --- Aislamiento CloudLab ---
+-A ufw-before-input -i br-cloudlab -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw-before-input -i br-cloudlab -j DROP
+# --- Fin aislamiento CloudLab ---
+```
+
+**Paso 3. Edita `/etc/ufw/after.rules`** (`sudo nano /etc/ufw/after.rules`). Estas reglas controlan el tráfico que los workspaces envían a través del host (Internet, LAN y otros contenedores). Ve al bloque `# BEGIN UFW AND DOCKER` (si no existe, créalo al final del archivo, **después** del primer `COMMIT`, y ciérralo con su propio `COMMIT`). Pega las reglas de CloudLab **antes** de cualquier otra línea `-A DOCKER-USER`; deben ir primero para que se evalúen primero:
+
+```text
+# BEGIN UFW AND DOCKER
+*filter
+:ufw-user-forward - [0:0]
+:ufw-docker-logging-deny - [0:0]
+:DOCKER-USER - [0:0]
+
+# --- Aislamiento CloudLab (debe ir primero) ---
+-A DOCKER-USER -i br-cloudlab -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A DOCKER-USER -i br-cloudlab -d 10.0.0.0/8 -j DROP
+-A DOCKER-USER -i br-cloudlab -d 172.16.0.0/12 -j DROP
+-A DOCKER-USER -i br-cloudlab -d 192.168.0.0/16 -j DROP
+-A DOCKER-USER -i br-cloudlab -d 169.254.0.0/16 -j DROP
+-A DOCKER-USER -i br-cloudlab -d 100.64.0.0/10 -j DROP
+-A DOCKER-USER -i br-cloudlab -d 224.0.0.0/4 -j DROP
+-A DOCKER-USER -i br-cloudlab -o br-cloudlab -j DROP
+# --- Fin aislamiento CloudLab ---
+
+-A DOCKER-USER -j ufw-user-forward
+# ... conserva aquí el resto de tu bloque existente (reglas de ufw-docker, etc.) y su COMMIT ...
+```
+
+Qué hace cada regla de `DOCKER-USER`:
+
+| Regla                                                       | Efecto                                                                                                                             |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `RELATED,ESTABLISHED` → `ACCEPT`                            | Permite las respuestas a conexiones ya establecidas.                                                                               |
+| `-d 10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` → `DROP` | Bloquea las redes privadas (LAN y otros contenedores, porque la red de workspaces `172.30.0.0/16` está dentro de `172.16.0.0/12`). |
+| `-d 169.254.0.0/16` → `DROP`                                | Bloquea direcciones link-local (incluye los servicios de metadatos de la nube).                                                    |
+| `-d 100.64.0.0/10` → `DROP`                                 | Bloquea el rango CGNAT.                                                                                                            |
+| `-d 224.0.0.0/4` → `DROP`                                   | Bloquea multicast.                                                                                                                 |
+| `-i br-cloudlab -o br-cloudlab` → `DROP`                    | Impide que los contenedores se comuniquen entre sí.                                                                                |
+
+> Importante: estas reglas dejan pasar el tráfico hacia Internet (cualquier puerto público). Si además quieres limitarlo solo a DNS (53) y HTTP/HTTPS (80, 443), añade estas líneas **entre** la regla `-d 224.0.0.0/4` y la regla `-o br-cloudlab`, y cierra con un descarte general:
+>
+> ```text
+> -A DOCKER-USER -i br-cloudlab -p udp --dport 53 -j ACCEPT
+> -A DOCKER-USER -i br-cloudlab -p tcp --dport 53 -j ACCEPT
+> -A DOCKER-USER -i br-cloudlab -p tcp -m multiport --dports 80,443 -j ACCEPT
+> -A DOCKER-USER -i br-cloudlab -j DROP
+> ```
+
+**Paso 4. Recarga UFW y verifica:**
+
+```bash
+sudo ufw reload
+sudo ufw status verbose
+sudo iptables -S DOCKER-USER | grep br-cloudlab
+sudo iptables -S ufw-before-input | grep br-cloudlab
+```
+
+Los dos últimos comandos deben listar las reglas de CloudLab. Si `ufw reload` muestra un error de sintaxis, restaura la copia (`sudo cp /etc/ufw/after.rules.bak /etc/ufw/after.rules`, y lo mismo con `before.rules`) y revisa que cada bloque `*filter` termine con su `COMMIT`. Reinicia Docker si las reglas no aparecen: `sudo systemctl restart docker`.
+
+### 6.2 Comprobar la política
+
+Estas pruebas se hacen **desde dentro de un workspace** (cuando ya puedas crear uno, en la sección 10):
+
+```bash
+curl -I https://example.com                          # DEBE funcionar
+curl --connect-timeout 3 http://192.168.1.1          # DEBE fallar
+curl --connect-timeout 3 http://172.30.0.1           # DEBE fallar
+```
+
+Si alguno de los dos últimos responde, el firewall no está aislando correctamente: corrígelo antes de abrir CloudLab a usuarios.
+
+---
+
+## 7. Compilar el frontend
 
 ```bash
 cd /var/www/cloudlab/frontend
@@ -341,18 +573,22 @@ pnpm install --frozen-lockfile
 pnpm build
 ```
 
-La compilación genera `dist/`. Nginx debe servir esa carpeta:
+La compilación genera la carpeta `dist/`, que Nginx servirá. No uses `pnpm dev` en producción.
 
-```text
-/var/www/cloudlab/frontend/dist
+**Verificación:**
+
+```bash
+ls /var/www/cloudlab/frontend/dist/index.html
+ls /var/www/cloudlab/frontend/dist/assets/
 ```
 
-No uses `pnpm dev` en producción. Después de cada actualización, valida que
-`dist/index.html` y `dist/assets/` existan antes de recargar Nginx.
+Ambos deben existir. Repite esta verificación después de cada actualización, antes de recargar Nginx.
+
+---
 
 ## 8. Ejecutar el backend
 
-Compila y valida desde el repositorio backend:
+### 8.1 Validar y compilar
 
 ```bash
 cd /var/www/cloudlab/backend
@@ -361,47 +597,54 @@ pnpm test
 pnpm build
 ```
 
-Instala PM2 y arranca el backend como el usuario de despliegue. La API escucha
-en `127.0.0.1:8000` y Nginx será el único punto público:
+Si alguno falla, no continúes: corrige el error antes de arrancar el servicio.
+
+### 8.2 Iniciar con PM2
+
+Instala PM2 y arranca la API como el usuario de despliegue. Debe escuchar solo en `127.0.0.1:8000`:
 
 ```bash
 cd /var/www/cloudlab/backend
-pnpm add --global pm2
+npm install -g pm2
 pm2 start dist/app.js --name cloudlab-api
 pm2 status
 pm2 logs cloudlab-api --lines 100
 ```
 
-Configura el arranque automático después de reiniciar el servidor:
+> PM2 hereda las variables de `.env` solo si la aplicación las carga por sí misma. Si el log muestra errores de configuración, inicia PM2 desde una terminal donde hayas cargado el `.env` (sección 3.3) y vuelve a lanzar con `pm2 restart cloudlab-api --update-env`.
+
+### 8.3 Arranque automático tras reinicio
 
 ```bash
 pm2 save
 pm2 startup
 ```
 
-Ejecuta el comando `sudo` que PM2 muestre en la salida de `pm2 startup` y
-después guarda nuevamente la lista de procesos:
+`pm2 startup` imprime un comando que empieza con `sudo`. **Cópialo y ejecútalo tal cual**, y después guarda de nuevo:
 
 ```bash
 pm2 save
 ```
 
-Comprueba localmente:
+**Verificación:**
 
 ```bash
 curl -i http://127.0.0.1:8000/api/no-existe
 ```
 
-Debe responder la API, normalmente con `404`, sin exponer el puerto a la red
-externa.
+La API debe responder (normalmente `404`). Confirma también que el puerto **no** está expuesto a la red externa:
+
+```bash
+ss -tlnp | grep 8000      # debe mostrar 127.0.0.1:8000, nunca 0.0.0.0:8000
+```
+
+---
 
 ## 9. Configurar Nginx
 
-Instala el archivo de servidor en `/etc/nginx/sites-available/cloudlab` y crea
-el enlace correspondiente en `sites-enabled`. Ajusta `server_name`, `root` y
-los certificados si usas HTTPS.
+### 9.1 Configuración base
 
-Configuración base:
+Este es el contenido de referencia (`server_name` debe ser tu dominio real, o `cloudlab.local` en pruebas). La versión del repositorio está en `backend/nginx.conf`; el archivo instalado en el servidor debe coincidir con esta guía.
 
 ```nginx
 map $http_upgrade $connection_upgrade {
@@ -490,44 +733,122 @@ server {
 }
 ```
 
-Instala la configuración versionada y desactiva el sitio predeterminado:
+### 9.2 Instalar la configuración
+
+**Debian / Ubuntu** (copia la versión del repositorio y actívala):
 
 ```bash
 sudo cp /var/www/cloudlab/backend/nginx.conf /etc/nginx/sites-available/cloudlab
 sudo ln -sfn /etc/nginx/sites-available/cloudlab /etc/nginx/sites-enabled/cloudlab
 sudo rm -f /etc/nginx/sites-enabled/default
+```
+
+**Fedora / RHEL / Arch:** no existen `sites-available`/`sites-enabled`; copia el archivo a `/etc/nginx/conf.d/cloudlab.conf` (en Arch, asegúrate de que `nginx.conf` incluya `conf.d/*.conf` dentro de `http {}`).
+
+Edita el archivo instalado con `sudo nano /etc/nginx/sites-available/cloudlab` (o `/etc/nginx/conf.d/cloudlab.conf` en Fedora, RHEL y Arch; o tu editor de preferencia) y ajusta:
+
+1. `server_name`: pon tu dominio real (si el repositorio trae `server_name _;`, reemplázalo). **Despliegue local:** usa la IP del servidor (obtenida con `ip -4 -br addr`) o el nombre que registraste en el archivo `hosts` de tus equipos; puedes poner varios separados por espacio, por ejemplo `server_name 192.168.1.50 cloudlab.local;`.
+2. `root`: debe ser `/var/www/cloudlab/frontend/dist` (o tu ruta real).
+3. Si usas otro dominio para el frontend, actualiza también `FRONTEND_URLS` en `.env` y reinicia la API (`pm2 restart cloudlab-api --update-env`).
+
+Valida y activa Nginx:
+
+```bash
 sudo nginx -t
 sudo systemctl enable --now nginx
 sudo systemctl reload nginx
 ```
 
-Antes de habilitar HTTPS, reemplaza `server_name _;` por el dominio real y
-configura los certificados. Si el frontend usa otro dominio, actualiza también
-`FRONTEND_URLS` en el `.env`.
+`nginx -t` debe terminar con `syntax is ok` y `test is successful`; si no, no recargues.
 
-La configuración original del repositorio backend está en `nginx.conf`. El
-archivo instalado en el servidor debe revisarse junto con esta guía.
+### 9.3 HTTPS (opcional)
+
+**Solo si quieres usar HTTPS** (recomendado si el servicio será accesible desde Internet): configura certificados (por ejemplo con Certbot) y añade `listen 443 ssl;` con `ssl_certificate` y `ssl_certificate_key` en la configuración de Nginx. Con HTTPS, `FRONTEND_URLS` debe usar `https://` y debes abrir también el puerto 443 en el paso 9.4.
+
+**Si no vas a usar HTTPS** (por ejemplo, en un despliegue local), no hagas nada aquí: este paso ya terminó y puedes continuar con 9.4.
+
+### 9.4 Abrir el puerto 80 (y 443) en el firewall del servidor
+
+Para que otros equipos accedan a CloudLab, el firewall debe permitir el tráfico entrante a Nginx. Primero identifica qué firewall usa tu sistema:
+
+```bash
+sudo ufw status                    # ¿"active"? → UFW
+sudo firewall-cmd --state          # ¿"running"? → firewalld
+sudo nft list ruleset | head -n 20 # reglas nftables
+sudo iptables -S | head -n 20      # reglas iptables
+```
+
+**Si usas UFW** (activo):
+
+```bash
+sudo ufw allow OpenSSH          # asegúrate de no perder el acceso SSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp          # solo si configuraste HTTPS
+sudo ufw status numbered
+```
+
+Si UFW está `inactive`, no lo actives sin antes permitir SSH (`sudo ufw allow OpenSSH`), o perderás el acceso remoto al servidor.
+
+**Si usas otro firewall** (investiga la opción de tu sistema):
+
+| Firewall                                   | Comandos                                                                                                                      |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| firewalld (Fedora, RHEL, Rocky, AlmaLinux) | `sudo firewall-cmd --permanent --add-service=http` y `sudo firewall-cmd --reload` (añade `--add-service=https` si usas HTTPS) |
+| iptables directo                           | `sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT` (persiste con el mecanismo de tu distribución)                           |
+| nftables                                   | Añade una regla `tcp dport 80 accept` en la cadena `input` de `/etc/nftables.conf` y ejecuta `sudo systemctl reload nftables` |
+| Firewall del proveedor (VPS o nube)        | Abre el puerto 80 (y 443) en el panel: grupo de seguridad o reglas de red de la instancia                                     |
+
+Si tu sistema usa otro firewall, consulta su documentación con la búsqueda "abrir puerto 80 en <nombre del firewall> <tu distribución>".
+
+**Verificación** desde **otro equipo** de la red:
+
+```bash
+curl -I http://<IP_O_DOMINIO_DEL_SERVIDOR>/    # debe responder 200
+```
+
+**Verificación local:**
+
+```bash
+curl -I http://cloudlab.local/                  # 200: sirve el frontend (usa tu dominio o añade el host con -H "Host: ...")
+curl -i  http://cloudlab.local/api/no-existe    # responde la API (404), pasando por Nginx
+```
+
+---
 
 ## 10. Orden de actualización
 
+Sigue siempre este orden:
+
 ```text
-1. Actualizar backend y ejecutar typecheck, tests y build.
-2. Reiniciar el proceso con `pm2 restart cloudlab-api`.
-3. Actualizar frontend y ejecutar build.
-4. Confirmar que frontend/dist contiene la nueva compilación.
-5. Validar nginx -t y recargar Nginx.
-6. Probar login, imágenes, creación de workspace y escritorio KasmVNC.
+1. Backend: git pull, pnpm install --frozen-lockfile, pnpm typecheck, pnpm test, pnpm build.
+2. Reiniciar la API: pm2 restart cloudlab-api
+3. Frontend: git pull, pnpm install --frozen-lockfile, pnpm build.
+4. Confirmar que frontend/dist/index.html y frontend/dist/assets/ existen y son recientes.
+5. sudo nginx -t  y, si es correcto, sudo systemctl reload nginx
+6. Probar: login, listado de imágenes, creación de workspace y escritorio KasmVNC.
 ```
 
-## 11. Checklist
+Después de la primera instalación, usa este paso 6 también para ejecutar las pruebas de firewall de la sección 6.2.
 
-- `.env` existe solo en el servidor y no está versionado.
-- MariaDB y Redis están saludables.
-- `cloudlab-network-aislada` existe.
-- El firewall bloquea redes privadas y otros contenedores.
-- El backend escucha solo en `127.0.0.1:8000`.
-- `frontend/dist/index.html` existe.
-- Nginx usa el `root` correcto.
-- `/api/` responde mediante proxy.
-- `/workspace/<uuid>/...` permite el escritorio y WebSocket.
-- No se montó `docker.sock` en ningún contenedor de usuario.
+---
+
+## 11. Checklist final
+
+Marca cada punto antes de dar el despliegue por terminado:
+
+- [ ] `.env` existe solo en el servidor, con permisos `600`, y no está versionado.
+- [ ] MariaDB y Redis están en estado `healthy` (`docker compose ps`).
+- [ ] Existen las tablas `users`, `container_images` y `workspaces`.
+- [ ] Se cambió la contraseña del administrador inicial.
+- [ ] La red `cloudlab-network-aislada` existe.
+- [ ] El firewall bloquea redes privadas, el host y otros contenedores (pruebas 6.2 superadas).
+- [ ] Si usas UFW: las reglas de `br-cloudlab` están en `before.rules` y `after.rules`, y `sudo ufw status` muestra los puertos 80 (y 443) permitidos.
+- [ ] Si no usas UFW: el puerto 80 (y 443) está abierto en el firewall de tu sistema o proveedor.
+- [ ] El backend escucha solo en `127.0.0.1:8000` y PM2 está guardado (`pm2 save`, `pm2 startup`).
+- [ ] `frontend/dist/index.html` existe.
+- [ ] Nginx usa el `root` y `server_name` correctos, y `nginx -t` pasa.
+- [ ] `/api/` responde mediante el proxy de Nginx.
+- [ ] `/workspace/<uuid>/...` abre el escritorio y la conexión WebSocket funciona.
+- [ ] `FRONTEND_URLS` coincide con los orígenes reales del frontend.
+- [ ] Despliegue local: `FRONTEND_URLS` y `server_name` usan la IP actual del servidor (o el nombre registrado en `hosts`), y la IP es fija.
+- [ ] No se montó `docker.sock` en ningún contenedor de usuario.
