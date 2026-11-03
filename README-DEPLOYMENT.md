@@ -642,9 +642,14 @@ ss -tlnp | grep 8000      # debe mostrar 127.0.0.1:8000, nunca 0.0.0.0:8000
 
 ## 9. Configurar Nginx
 
-### 9.1 Configuración base
+### 9.1 Configuración de referencia (solo lectura)
 
-Este es el contenido de referencia (`server_name` debe ser tu dominio real, o `cloudlab.local` en pruebas). La versión del repositorio está en `backend/nginx.conf`; el archivo instalado en el servidor debe coincidir con esta guía.
+**En este apartado no ejecutes nada.** Es el contenido que debe tener el archivo de Nginx del sitio, y sirve para dos cosas:
+
+- **Comparar:** la versión del repositorio (`backend/nginx.conf`) debe coincidir con este bloque. La acción real se hace en el paso 9.2.
+- **Crear el archivo a mano:** solo si `backend/nginx.conf` no existe en tu repositorio. En ese caso, copia este bloque completo en el archivo, como se indica en la Opción B del paso 9.2.
+
+Los valores que debes personalizar después de instalarlo son `server_name` (tu dominio, tu IP o `cloudlab.local`) y `root` (ruta de `frontend/dist`).
 
 ```nginx
 map $http_upgrade $connection_upgrade {
@@ -733,9 +738,14 @@ server {
 }
 ```
 
-### 9.2 Instalar la configuración
+### 9.2 Instalar la configuración (aquí sí ejecutas comandos)
 
-**Debian / Ubuntu** (copia la versión del repositorio y actívala):
+Este es el paso donde se crea y activa el archivo de Nginx. Elige **una** de las dos opciones:
+
+- **Opción A (recomendada):** copiar `backend/nginx.conf` del repositorio, como se muestra a continuación.
+- **Opción B:** si ese archivo no existe, crea el archivo vacío con `sudo nano /etc/nginx/sites-available/cloudlab` (o `/etc/nginx/conf.d/cloudlab.conf` en Fedora, RHEL y Arch), pega el bloque completo de 9.1, guarda y salta a la activación del enlace (`ln -sfn`) y las líneas siguientes.
+
+**Opción A en Debian / Ubuntu** (copia la versión del repositorio y actívala):
 
 ```bash
 sudo cp /var/www/cloudlab/backend/nginx.conf /etc/nginx/sites-available/cloudlab
