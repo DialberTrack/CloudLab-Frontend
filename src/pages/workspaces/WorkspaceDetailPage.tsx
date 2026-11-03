@@ -10,202 +10,199 @@ import { statusLabel, statusStyles } from '../../features/workspaces/workspacePr
 import { MetricsPanel } from '../../features/workspaces/MetricsPanel';
 
 export function WorkspaceDetailPage() {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [workspace, setWorkspace] = useState<Workspace | null>(null);
-    const [metrics, setMetrics] = useState<Record<string, unknown> | null>(null);
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [busy, setBusy] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
-    const load = useCallback(async () => {
-        if (!id) return;
-        setRefreshing(true);
-        try {
-            const [details, data] = await Promise.allSettled([
-                workspaceApi.get(id),
-                workspaceApi.metrics(id),
-            ]);
-            if (details.status === 'fulfilled') {
-                setWorkspace(details.value);
-            }
-            if (data.status === 'fulfilled') {
-                setMetrics(data.value.data);
-            }
-            const rejected = [details, data].find((result) => result.status === 'rejected');
-            if (rejected?.status === 'rejected') {
-                setError(messageOf(rejected.reason));
-            } else {
-                setError('');
-            }
-        } catch (reason) {
-            setError(messageOf(reason));
-        } finally {
-            setRefreshing(false);
-            setLoading(false);
-        }
-    }, [id]);
-    useEffect(() => {
-        void load();
-    }, [load]);
-    const run = async (operation: 'start' | 'stop' | 'restart' | 'retry') => {
-        if (!id) return;
-        setBusy(true);
-        try {
-            setWorkspace(await workspaceApi.action(id, operation));
-        } catch (reason) {
-            setError(messageOf(reason));
-        } finally {
-            setBusy(false);
-        }
-    };
-    const remove = async () => {
-        if (!id || !window.confirm('¿Eliminar este workspace?')) return;
-        try {
-            await workspaceApi.remove(id);
-            navigate('/workspaces');
-        } catch (reason) {
-            setError(messageOf(reason));
-        }
-    };
-    if (loading) return <Loading />;
-    const operationLocked =
-        Boolean(busy) || workspace?.status === 'creating' || workspace?.status === 'deleting';
-    const startDisabled = operationLocked || workspace?.status === 'running';
-    const stopDisabled = operationLocked || workspace?.status === 'stopped';
-    const restartDisabled = operationLocked || workspace?.status !== 'running';
-    const retryDisabled = operationLocked || workspace?.status !== 'error';
-    return (
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [metrics, setMetrics] = useState<Record<string, unknown> | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const load = useCallback(async () => {
+    if (!id) return;
+    setRefreshing(true);
+    try {
+      const [details, data] = await Promise.allSettled([
+        workspaceApi.get(id),
+        workspaceApi.metrics(id),
+      ]);
+      if (details.status === 'fulfilled') {
+        setWorkspace(details.value);
+      }
+      if (data.status === 'fulfilled') {
+        setMetrics(data.value.data);
+      }
+      const rejected = [details, data].find((result) => result.status === 'rejected');
+      if (rejected?.status === 'rejected') {
+        setError(messageOf(rejected.reason));
+      } else {
+        setError('');
+      }
+    } catch (reason) {
+      setError(messageOf(reason));
+    } finally {
+      setRefreshing(false);
+      setLoading(false);
+    }
+  }, [id]);
+  useEffect(() => {
+    void load();
+  }, [load]);
+  const run = async (operation: 'start' | 'stop' | 'restart' | 'retry') => {
+    if (!id) return;
+    setBusy(true);
+    try {
+      setWorkspace(await workspaceApi.action(id, operation));
+    } catch (reason) {
+      setError(messageOf(reason));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const remove = async () => {
+    if (!id || !window.confirm('¿Eliminar este workspace?')) return;
+    try {
+      await workspaceApi.remove(id);
+      navigate('/workspaces');
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  if (loading) return <Loading />;
+  const operationLocked =
+    Boolean(busy) || workspace?.status === 'creating' || workspace?.status === 'deleting';
+  const startDisabled = operationLocked || workspace?.status === 'running';
+  const stopDisabled = operationLocked || workspace?.status === 'stopped';
+  const restartDisabled = operationLocked || workspace?.status !== 'running';
+  const retryDisabled = operationLocked || workspace?.status !== 'error';
+  return (
+    <>
+      <Link
+        to="/workspaces"
+        className="inline-block mb-6 text-sm text-slate-500 hover:text-slate-200"
+      >
+        ← Volver a workspaces
+      </Link>
+      {error && (
+        <div className="mb-6">
+          <Alert message={error} />
+        </div>
+      )}
+      {workspace && (
         <>
-            <Link
-                to="/workspaces"
-                className="mb-6 inline-block text-sm text-slate-500 hover:text-slate-200"
-            >
-                ← Volver a workspaces
-            </Link>
-            {error && (
-                <div className="mb-6">
-                    <Alert message={error} />
+          <PageHeader
+            title={workspace.name}
+            subtitle={`${workspace.image_name} · ${workspace.image}`}
+            action={
+              <div className="items-center gap-2 flex">
+                <button className="ghost-button" disabled={refreshing} onClick={() => void load()}>
+                  {refreshing ? 'Actualizando...' : '↻ Refrescar'}
+                </button>
+                <span className={`status ${statusStyles[workspace.status]}`}>
+                  {statusLabel[workspace.status]}
+                </span>
+              </div>
+            }
+          />
+          <div className="gap-6 grid lg:grid-cols-2">
+            <section className="panel">
+              <h2 className="section-title">Operaciones</h2>
+              <div className="gap-2 flex flex-wrap mt-5">
+                {workspace.status === 'error' && (
+                  <button
+                    className="small-button small-button-primary"
+                    disabled={retryDisabled}
+                    onClick={() => run('retry')}
+                  >
+                    ↻ Reintentar
+                  </button>
+                )}
+                {workspace.status === 'running' && (
+                  <Link
+                    className="small-button small-button-primary"
+                    to={`/workspaces/${workspace.id}/desktop`}
+                  >
+                    🖥️ Abrir escritorio
+                  </Link>
+                )}
+                <button
+                  className="small-button small-button-primary"
+                  disabled={startDisabled}
+                  title={
+                    startDisabled
+                      ? 'El workspace ya está activo o está cambiando de estado'
+                      : undefined
+                  }
+                  onClick={() => run('start')}
+                >
+                  ▶ Iniciar
+                </button>
+                <button
+                  className="small-button"
+                  disabled={stopDisabled}
+                  title={
+                    stopDisabled
+                      ? 'El workspace ya está detenido o está cambiando de estado'
+                      : undefined
+                  }
+                  onClick={() => run('stop')}
+                >
+                  ■ Detener
+                </button>
+                <button
+                  className="small-button"
+                  disabled={restartDisabled}
+                  title={restartDisabled ? 'Solo puedes reiniciar un workspace activo' : undefined}
+                  onClick={() => run('restart')}
+                >
+                  ↻ Reiniciar
+                </button>
+                <button
+                  className="small-button text-rose-300"
+                  disabled={operationLocked}
+                  onClick={remove}
+                >
+                  Eliminar
+                </button>
+              </div>
+              {workspace.error_message && (
+                <p className="mt-4 p-3 text-sm text-rose-300 rounded-lg bg-rose-500/10">
+                  {workspace.error_message}
+                </p>
+              )}
+              <dl className="space-y-3 mt-8 text-sm">
+                <div className="justify-between flex">
+                  <dt className="text-slate-500">Container</dt>
+                  <dd className="font-mono text-xs">{workspace.container_id ?? 'No asignado'}</dd>
                 </div>
-            )}
-            {workspace && (
-                <>
-                    <PageHeader
-                        title={workspace.name}
-                        subtitle={`${workspace.image_name} · ${workspace.image}`}
-                        action={
-                            <div className="flex items-center gap-2">
-                                <button
-                                    className="ghost-button"
-                                    disabled={refreshing}
-                                    onClick={() => void load()}
-                                >
-                                    {refreshing ? 'Actualizando...' : '↻ Refrescar'}
-                                </button>
-                                <span className={`status ${statusStyles[workspace.status]}`}>
-                                    {statusLabel[workspace.status]}
-                                </span>
-                            </div>
-                        }
-                    />
-                    <div className="grid gap-6 lg:grid-cols-2">
-                        <section className="panel">
-                            <h2 className="section-title">Operaciones</h2>
-                            <div className="mt-5 flex flex-wrap gap-2">
-                                {workspace.status === 'error' && (
-                                    <button
-                                        className="small-button small-button-primary"
-                                        disabled={retryDisabled}
-                                        onClick={() => run('retry')}
-                                    >
-                                        ↻ Reintentar
-                                    </button>
-                                )}
-                                {workspace.status === 'running' && (
-                                    <Link
-                                        className="small-button small-button-primary"
-                                        to={`/workspaces/${workspace.id}/desktop`}
-                                    >
-                                        🖥️ Abrir escritorio
-                                    </Link>
-                                )}
-                                <button
-                                    className="small-button small-button-primary"
-                                    disabled={startDisabled}
-                                    title={
-                                        startDisabled
-                                            ? 'El workspace ya está activo o está cambiando de estado'
-                                            : undefined
-                                    }
-                                    onClick={() => run('start')}
-                                >
-                                    ▶ Iniciar
-                                </button>
-                                <button
-                                    className="small-button"
-                                    disabled={stopDisabled}
-                                    title={
-                                        stopDisabled
-                                            ? 'El workspace ya está detenido o está cambiando de estado'
-                                            : undefined
-                                    }
-                                    onClick={() => run('stop')}
-                                >
-                                    ■ Detener
-                                </button>
-                                <button
-                                    className="small-button"
-                                    disabled={restartDisabled}
-                                    title={
-                                        restartDisabled
-                                            ? 'Solo puedes reiniciar un workspace activo'
-                                            : undefined
-                                    }
-                                    onClick={() => run('restart')}
-                                >
-                                    ↻ Reiniciar
-                                </button>
-                                <button
-                                    className="small-button text-rose-300"
-                                    disabled={operationLocked}
-                                    onClick={remove}
-                                >
-                                    Eliminar
-                                </button>
-                            </div>
-                            {workspace.error_message && (
-                                <p className="mt-4 rounded-lg bg-rose-500/10 p-3 text-sm text-rose-300">
-                                    {workspace.error_message}
-                                </p>
-                            )}
-                            <dl className="mt-8 space-y-3 text-sm">
-                                <div className="flex justify-between">
-                                    <dt className="text-slate-500">Container</dt>
-                                    <dd className="font-mono text-xs">
-                                        {workspace.container_id ?? 'No asignado'}
-                                    </dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-slate-500">Creado</dt>
-                                    <dd>
-                                        {new Date(workspace.created_at).toLocaleString('es-MX')}
-                                    </dd>
-                                </div>
-                            </dl>
-                        </section>
-                        <section className="panel">
-                            <h2 className="section-title">Métricas Docker</h2>
-                            {metrics ? (
-                                <MetricsPanel value={metrics} />
-                            ) : (
-                                <p className="mt-5 text-sm text-slate-500">
-                                    No hay métricas disponibles.
-                                </p>
-                            )}
-                        </section>
-                    </div>
-                </>
-            )}
+                <div className="justify-between flex">
+                  <dt className="text-slate-500">Creado</dt>
+                  <dd>{new Date(workspace.created_at).toLocaleString('es-MX')}</dd>
+                </div>
+                <div className="justify-between flex">
+                  <dt className="text-slate-500">Dueño</dt>
+                  {workspace.user_id && (
+                    <Link
+                      to={`/admin/users/${workspace.user_id}`}
+                      className="font-mono text-slate-200 hover:text-violet-400/80"
+                    >
+                      {workspace.user_id}
+                    </Link>
+                  )}
+                </div>
+              </dl>
+            </section>
+            <section className="panel">
+              <h2 className="section-title">Métricas Docker</h2>
+              {metrics ? (
+                <MetricsPanel value={metrics} />
+              ) : (
+                <p className="mt-5 text-sm text-slate-500">No hay métricas disponibles.</p>
+              )}
+            </section>
+          </div>
         </>
-    );
+      )}
+    </>
+  );
 }
