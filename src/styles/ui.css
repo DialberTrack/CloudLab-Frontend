@@ -1,0 +1,152 @@
+@layer components {
+  /* Superficies */
+  .panel {
+    @apply rounded-2xl border border-white/[0.07] bg-white/3 p-5 lg:p-6;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-slate-100;
+  }
+
+  .section-subtitle {
+    @apply mt-1 text-sm text-slate-500;
+  }
+
+  .page-header {
+    @apply mb-8 flex flex-wrap items-end justify-between gap-4;
+  }
+
+  .page-title {
+    @apply text-3xl font-semibold tracking-tight lg:text-4xl;
+  }
+
+  .page-subtitle {
+    @apply mt-2 text-slate-500;
+  }
+
+  /* Botones */
+  .primary-button {
+    @apply rounded-xl bg-linear-to-r from-violet-500 to-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:from-violet-400 hover:to-indigo-400;
+  }
+
+  .ghost-button {
+    @apply rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/6 hover:text-white;
+  }
+
+  .danger-button {
+    @apply rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20;
+  }
+
+  .small-button {
+    @apply inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-xs font-medium leading-4 text-slate-300 transition hover:bg-white/6 hover:text-white;
+  }
+
+  .small-button-primary {
+    @apply border-violet-400/20 bg-violet-500/10 text-violet-200;
+  }
+
+  .icon-button {
+    @apply text-2xl leading-none text-slate-500 transition hover:text-white;
+  }
+
+  /* Formularios */
+  .field-label {
+    @apply block text-sm font-medium text-slate-300;
+  }
+
+  .field {
+    @apply mt-2 block w-full rounded-xl border border-white/10 bg-black/20 px-3.5 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10;
+  }
+
+  .checkbox-field {
+    @apply flex items-center gap-3 text-sm text-slate-300;
+  }
+
+  /* Estados y avisos */
+  .status {
+    @apply inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ring-1;
+  }
+
+  .alert {
+    @apply flex items-start justify-between gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200;
+  }
+
+  .loading-state {
+    @apply grid min-h-48 place-items-center text-sm text-slate-500;
+  }
+
+  .empty-state {
+    @apply grid place-items-center rounded-xl border border-dashed border-white/10 py-14 text-center;
+  }
+
+  .empty-state-text {
+    @apply text-sm text-slate-500;
+  }
+
+  /* Modales */
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 grid place-items-center bg-black/70 p-5 backdrop-blur-sm;
+  }
+
+  .modal {
+    @apply w-full max-w-lg rounded-2xl border border-white/10 bg-[#111624] p-6 shadow-2xl;
+  }
+
+  .modal-header {
+    @apply mb-6 flex justify-between gap-4;
+  }
+
+  .confirm-message {
+    @apply text-sm leading-6 text-slate-400;
+  }
+
+  .confirm-actions {
+    @apply mt-7 flex justify-end gap-3;
+  }
+
+  /* Tablas y paginación */
+  .data-table {
+    @apply w-full min-w-140 text-left text-sm text-slate-500;
+  }
+
+  .data-table th {
+    @apply border-b border-white/[0.07] pb-3 text-xs font-medium uppercase tracking-wider text-slate-600;
+  }
+
+  .data-table td {
+    @apply border-b border-white/5 py-4;
+  }
+
+  .pagination {
+    @apply mt-6 flex flex-wrap items-center justify-between gap-3;
+  }
+
+  .pagination-summary {
+    @apply text-xs text-slate-500;
+  }
+
+  .pagination-actions {
+    @apply flex gap-2;
+  }
+
+  /* Identidad */
+  .avatar {
+    @apply grid shrink-0 place-items-center rounded-full bg-linear-to-br from-violet-500 to-cyan-400 font-semibold text-white;
+  }
+
+  .avatar-large {
+    @apply h-20 w-20 text-2xl;
+  }
+
+  .avatar-small {
+    @apply h-9 w-9 text-xs;
+  }
+
+  .container-image-icon {
+    @apply grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-violet-500/10 text-sm font-semibold text-violet-300;
+  }
+
+  .container-image {
+    @apply h-9 w-9 rounded-lg object-cover ring-1 ring-white/10;
+  }
+}

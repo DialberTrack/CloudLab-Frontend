@@ -1,53 +1,126 @@
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
-import { useAuth } from './AuthContext';
-import { AppLayout } from '../layouts/AppLayout';
-import { Loading } from '../components/Loading';
-import { LoginPage } from '../pages/auth/LoginPage';
-import { DashboardPage } from '../pages/dashboard/DashboardPage';
-import { WorkspacesPage } from '../pages/workspaces/WorkspacesPage';
-import { WorkspaceDetailPage } from '../pages/workspaces/WorkspaceDetailPage';
-import { ImagesPage } from '../pages/images/ImagesPage';
-import { ProfilePage } from '../pages/profile/ProfilePage';
-import { AdminPage } from '../pages/admin/AdminPage';
-import { AdminWorkspacesPage } from '../pages/admin/AdminWorkspacesPage';
-import { AdminImagesPage } from '../pages/admin/AdminImagesPage';
-import { AdminUserDetailPage } from '../pages/admin/AdminUserDetailPage';
-import { NotFoundPage } from '../pages/NotFoundPage';
-import { WorkspaceDesktopPage } from '../pages/workspaces/WorkspaceDesktopPage';
+import { createBrowserRouter } from 'react-router-dom';
+import type { RouteObject } from 'react-router-dom';
+import type { ComponentType } from 'react';
+import { AppLayout } from '@/layouts/AppLayout';
+import type { RouteHandle } from '@/shared/config/routes';
+import { Loading } from '@/shared/ui/Loading';
+import { AdminRoute, ProtectedRoute, PublicOnlyRoute } from './guards';
 
-function ProtectedRoute() {
-  const { user, loading } = useAuth();
-  if (loading) return <Loading label="Restaurando sesión..." />;
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
-}
+/** Carga diferida de una página exportada por nombre. */
+const page = <M extends Record<string, unknown>>(
+  load: () => Promise<M>,
+  name: keyof M
+): Pick<RouteObject, 'lazy'> => ({
+  lazy: async () => ({ Component: (await load())[name] as ComponentType }),
+});
 
-function AdminRoute() {
-  const { user } = useAuth();
-  return user?.role === 'admin' ? <Outlet /> : <Navigate to="/" replace />;
-}
+const titled = (title: string): { handle: RouteHandle } => ({ handle: { title } });
 
-export function AppRouter() {
-  const { user } = useAuth();
-  return (
-    <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="workspaces" element={<WorkspacesPage />} />
-          <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
-          <Route path="workspaces/:id/desktop" element={<WorkspaceDesktopPage />} />
-          <Route path="images" element={<ImagesPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route element={<AdminRoute />}>
-            <Route path="admin/users" element={<AdminPage />} />
-            <Route path="admin/users/:id" element={<AdminUserDetailPage />} />
-            <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
-            <Route path="admin/images" element={<AdminImagesPage />} />
-          </Route>
-        </Route>
-      </Route>
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  );
-}
+const routes: RouteObject[] = [
+  {
+    HydrateFallback: () => <Loading label="Cargando..." />,
+    children: [
+      {
+        element: <PublicOnlyRoute />,
+        children: [
+          {
+            path: '/login',
+            ...page(() => import('@/features/auth/pages/LoginPage'), 'LoginPage'),
+          },
+        ],
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            element: <AppLayout />,
+            children: [
+              {
+                index: true,
+                ...titled('Resumen'),
+                ...page(() => import('@/features/dashboard/pages/DashboardPage'), 'DashboardPage'),
+              },
+              {
+                path: 'workspaces',
+                ...titled('Workspaces'),
+                ...page(
+                  () => import('@/features/workspaces/pages/WorkspacesPage'),
+                  'WorkspacesPage'
+                ),
+              },
+              {
+                path: 'workspaces/:id',
+                ...titled('Detalle del workspace'),
+                ...page(
+                  () => import('@/features/workspaces/pages/WorkspaceDetailPage'),
+                  'WorkspaceDetailPage'
+                ),
+              },
+              {
+                path: 'workspaces/:id/desktop',
+                ...titled('Escritorio'),
+                ...page(
+                  () => import('@/features/workspaces/pages/WorkspaceDesktopPage'),
+                  'WorkspaceDesktopPage'
+                ),
+              },
+              {
+                path: 'images',
+                ...titled('Imágenes'),
+                ...page(() => import('@/features/container-images/pages/ImagesPage'), 'ImagesPage'),
+              },
+              {
+                path: 'profile',
+                ...titled('Mi perfil'),
+                ...page(() => import('@/features/auth/pages/ProfilePage'), 'ProfilePage'),
+              },
+              {
+                element: <AdminRoute />,
+                children: [
+                  {
+                    path: 'admin/users',
+                    ...titled('Administración / Usuarios'),
+                    ...page(
+                      () => import('@/features/users/pages/AdminUsersPage'),
+                      'AdminUsersPage'
+                    ),
+                  },
+                  {
+                    path: 'admin/users/:id',
+                    ...titled('Administración / Usuario'),
+                    ...page(
+                      () => import('@/features/users/pages/AdminUserDetailPage'),
+                      'AdminUserDetailPage'
+                    ),
+                  },
+                  {
+                    path: 'admin/workspaces',
+                    ...titled('Administración / Workspaces'),
+                    ...page(
+                      () => import('@/features/workspaces/pages/AdminWorkspacesPage'),
+                      'AdminWorkspacesPage'
+                    ),
+                  },
+                  {
+                    path: 'admin/images',
+                    ...titled('Administración / Imágenes'),
+                    ...page(
+                      () => import('@/features/container-images/pages/AdminImagesPage'),
+                      'AdminImagesPage'
+                    ),
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        path: '*',
+        ...page(() => import('./NotFoundPage'), 'NotFoundPage'),
+      },
+    ],
+  },
+];
+
+export const router = createBrowserRouter(routes);

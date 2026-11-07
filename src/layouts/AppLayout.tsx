@@ -1,21 +1,44 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../app/AuthContext';
-import { Avatar } from '../components/Avatar';
-import { Logo } from '../components/Logo';
+import { NavLink, Outlet, useMatches } from 'react-router-dom';
+import { useAuth } from '@/features/auth/AuthContext';
+import type { RouteHandle } from '@/shared/config/routes';
+import { cx } from '@/shared/lib/cx';
+import { Avatar } from '@/shared/ui/Avatar';
+import { Logo } from '@/shared/ui/Logo';
+import { adminNavigation, mainNavigation } from './navigation';
+import type { NavItem } from './navigation';
 
-const links = [
-  { to: '/', label: 'Resumen', icon: '⌂', end: true },
-  { to: '/workspaces', label: 'Workspaces', icon: '◈' },
-  { to: '/images', label: 'Imágenes', icon: '▣' },
-  { to: '/profile', label: 'Mi perfil', icon: '◉' },
-];
+function SidebarLink({
+  item,
+  compact = false,
+  onNavigate,
+}: {
+  item: NavItem;
+  compact?: boolean;
+  onNavigate: () => void;
+}) {
+  return (
+    <NavLink
+      to={item.to}
+      end={item.end}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        cx('nav-item', compact && 'nav-item-compact', isActive && 'nav-item-active')
+      }
+    >
+      <span className="app-sidebar-nav-icon">{item.icon}</span>
+      {item.label}
+    </NavLink>
+  );
+}
 
 export function AppLayout() {
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
-  const location = useLocation();
-  const current = links.find((link) => link.to === location.pathname)?.label ?? 'CloudLab';
+  const title = useMatches()
+    .map((match) => (match.handle as RouteHandle | undefined)?.title)
+    .findLast(Boolean);
+  const close = () => setOpen(false);
 
   return (
     <div className="app-shell">
@@ -25,38 +48,23 @@ export function AppLayout() {
           <span className="font-semibold tracking-tight">CloudLab</span>
         </div>
         <p className="app-sidebar-section-label">Workspace</p>
-        <nav className="app-sidebar-nav">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.end}
-              onClick={() => setOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
-            >
-              <span className="app-sidebar-nav-icon">{link.icon}</span>
-              {link.label}
-            </NavLink>
+        <nav className="app-sidebar-nav" aria-label="Principal">
+          {mainNavigation.map((item) => (
+            <SidebarLink key={item.to} item={item} onNavigate={close} />
           ))}
           {user?.role === 'admin' && (
             <div className="app-sidebar-admin">
               <p className="app-sidebar-admin-label">Administración</p>
-              <NavLink to="/admin/users" className="nav-item text-xs">
-                ♙ Usuarios
-              </NavLink>
-              <NavLink to="/admin/workspaces" className="nav-item text-xs">
-                ◈ Workspaces
-              </NavLink>
-              <NavLink to="/admin/images" className="nav-item text-xs">
-                ▣ Imágenes
-              </NavLink>
+              {adminNavigation.map((item) => (
+                <SidebarLink key={item.to} item={item} compact onNavigate={close} />
+              ))}
             </div>
           )}
         </nav>
         <div className="app-sidebar-user">
           {user && (
             <div className="app-sidebar-user-info">
-              <Avatar user={user} />
+              <Avatar name={user.name} />
               <div className="min-w-0">
                 <p className="app-sidebar-user-name">{user.name}</p>
                 <p className="app-sidebar-user-email">{user.email}</p>
@@ -64,7 +72,7 @@ export function AppLayout() {
             </div>
           )}
           <div className="app-sidebar-logout">
-            <button className="logout-link" onClick={signOut}>
+            <button type="button" className="logout-link" onClick={() => void signOut()}>
               ↪ Cerrar sesión
             </button>
           </div>
@@ -72,27 +80,29 @@ export function AppLayout() {
       </aside>
       {open && (
         <button
+          type="button"
           className="app-mobile-overlay"
-          onClick={() => setOpen(false)}
+          onClick={close}
           aria-label="Cerrar menú"
         />
       )}
       <div className="app-content">
         <header className="app-header">
           <button
+            type="button"
             className="app-mobile-menu-button"
             onClick={() => setOpen(true)}
             aria-label="Abrir menú"
           >
             ☰
           </button>
-          <p className="app-header-context">CloudLab / {current}</p>
+          <p className="app-header-context">CloudLab / {title ?? 'Panel'}</p>
           <div className="app-header-status">
             <span className="app-header-status-label">Sistema operativo</span>
             <span className="app-header-status-indicator" />
             {user && (
               <div className="lg:hidden">
-                <Avatar user={user} />
+                <Avatar name={user.name} />
               </div>
             )}
           </div>

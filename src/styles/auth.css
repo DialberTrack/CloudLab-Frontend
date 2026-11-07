@@ -1,0 +1,67 @@
+@layer components {
+  .auth-page,
+  .not-found-page {
+    @apply relative grid min-h-dvh place-items-center overflow-hidden bg-[#080b14] px-6 text-slate-100;
+  }
+
+  .auth-card,
+  .not-found-card {
+    @apply relative w-full rounded-3xl border border-white/10 bg-white/6 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl;
+  }
+
+  .auth-card {
+    @apply max-w-md;
+  }
+
+  .not-found-card {
+    @apply max-w-lg text-center sm:p-10;
+  }
+
+  .background-orb {
+    @apply pointer-events-none absolute h-96 w-96 rounded-full blur-3xl;
+  }
+
+  .background-orb-violet {
+    @apply left-0 top-0 bg-violet-600/20;
+  }
+
+  .background-orb-cyan {
+    @apply bottom-0 right-0 bg-cyan-500/10;
+  }
+
+  .auth-brand {
+    @apply mb-7 flex items-center gap-3;
+  }
+
+  .auth-header {
+    @apply mb-10;
+  }
+
+  .auth-eyebrow {
+    @apply mb-2 text-sm font-medium text-cyan-300;
+  }
+
+  .auth-title {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  .auth-description {
+    @apply mt-2 text-sm text-slate-400;
+  }
+
+  .not-found-brand {
+    @apply mb-8 flex items-center justify-center gap-3;
+  }
+
+  .not-found-code {
+    @apply text-7xl font-bold tracking-tight text-violet-300 sm:text-8xl;
+  }
+
+  .not-found-title {
+    @apply mt-5 text-2xl font-semibold tracking-tight;
+  }
+
+  .not-found-description {
+    @apply mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-400;
+  }
+}
