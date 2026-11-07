@@ -94,7 +94,7 @@ export function AdminPage() {
   const reset = async (user: User) => {
     try {
       const response = await adminApi.resetPassword(user.id);
-      window.alert(`Contraseña temporal de ${response.user.email}: ${response.user.newPassword}`);
+      window.alert(`Contraseña temporal de ${response.data.email}: ${response.data.newPassword}`);
     } catch (reason) {
       setError(messageOf(reason));
     }

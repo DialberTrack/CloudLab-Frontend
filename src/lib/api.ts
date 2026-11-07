@@ -9,6 +9,10 @@ export type Pagination = {
   totalPages: number;
 };
 
+export type ApiData<T> = { data: T };
+
+export type ApiPage<T> = ApiData<T[]> & { pagination: Pagination };
+
 type ApiErrorPayload = { error?: string; code?: string; issues?: unknown };
 
 export class ApiError extends Error {
@@ -37,8 +41,8 @@ const refreshAccessToken = async (): Promise<string | null> => {
     accessToken = null;
     return null;
   }
-  const payload = (await response.json()) as { accessToken: string };
-  accessToken = payload.accessToken;
+  const payload = (await response.json()) as ApiData<{ accessToken: string }>;
+  accessToken = payload.data.accessToken;
   return accessToken;
 };
 
@@ -94,61 +98,65 @@ const query = (params: Record<string, string | number | undefined>) => {
 
 export const authApi = {
   async login(email: string, password: string) {
-    const response = await request<{ accessToken: string; user: User }>('/auth/login', {
+    const response = await request<ApiData<{ accessToken: string; user: User }>>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    accessToken = response.accessToken;
-    return request<{ user: User }>('/auth/me').then((profile) => profile.user);
+    accessToken = response.data.accessToken;
+    return request<ApiData<User>>('/auth/me').then((profile) => profile.data);
   },
   async restore() {
     if (!(await refresh())) {
       throw new ApiError('Tu sesión ha expirado.', 401);
     }
-    return request<{ user: User }>('/auth/me').then((response) => response.user);
+    return request<ApiData<User>>('/auth/me').then((response) => response.data);
   },
   async me() {
-    return request<{ user: User }>('/auth/me').then((response) => response.user);
+    return request<ApiData<User>>('/auth/me').then((response) => response.data);
   },
   async logout() {
     await request('/auth/logout', { method: 'POST' }, false);
     accessToken = null;
   },
   async changePassword(current: string, password: string) {
-    const response = await request<{ accessToken: string }>('/auth/change-password', {
+    const response = await request<ApiData<{ accessToken: string }>>('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ current, password }),
     });
-    accessToken = response.accessToken;
+    accessToken = response.data.accessToken;
   },
 };
 
 export const workspaceApi = {
   list: (params?: { page?: number; limit?: number; q?: string }) =>
-    request<{ data: Workspace[]; pagination: Pagination }>(`/workspaces${query(params ?? {})}`),
+    request<ApiPage<Workspace>>(`/workspaces${query(params ?? {})}`),
   create: (name: string, containerImageId: string) =>
-    request<Workspace>('/workspaces', {
+    request<ApiData<Workspace>>('/workspaces', {
       method: 'POST',
       body: JSON.stringify({ name, container_image_id: containerImageId }),
-    }),
-  get: (id: string) => request<Workspace>(`/workspaces/${id}`),
+    }).then((response) => response.data),
+  get: (id: string) =>
+    request<ApiData<Workspace>>(`/workspaces/${id}`).then((response) => response.data),
   action: (id: string, action: 'start' | 'stop' | 'restart' | 'retry') =>
-    request<Workspace>(`/workspaces/${id}/${action}`, { method: 'POST' }),
-  metrics: (id: string) => request<{ data: Record<string, unknown> }>(`/workspaces/${id}/metrics`),
+    request<ApiData<Workspace>>(`/workspaces/${id}/${action}`, { method: 'POST' }).then(
+      (response) => response.data
+    ),
+  metrics: (id: string) =>
+    request<ApiData<Record<string, unknown>>>(`/workspaces/${id}/metrics`),
   createContainerSession: (id: string) =>
     request<void>(`/workspaces/${id}/container-session`, { method: 'POST' }),
   remove: (id: string) => request(`/workspaces/${id}`, { method: 'DELETE' }),
 };
 
 export const imageApi = {
-  list: () => request<{ data: ContainerImage[] }>('/container-images'),
-  get: (id: string) => request<{ data: ContainerImage }>(`/container-images/${id}`),
+  list: () => request<ApiData<ContainerImage[]>>('/container-images'),
+  get: (id: string) => request<ApiData<ContainerImage>>(`/container-images/${id}`),
   create: (
     input: Pick<ContainerImage, 'name' | 'image' | 'description' | 'icon' | 'sort_order'> & {
       is_active: boolean;
     }
   ) =>
-    request<{ data: ContainerImage }>('/container-images', {
+    request<ApiData<ContainerImage>>('/container-images', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
@@ -158,7 +166,7 @@ export const imageApi = {
       Pick<ContainerImage, 'name' | 'image' | 'description' | 'icon' | 'is_active' | 'sort_order'>
     >
   ) =>
-    request<{ data: ContainerImage }>(`/container-images/${id}`, {
+    request<ApiData<ContainerImage>>(`/container-images/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),
@@ -167,25 +175,23 @@ export const imageApi = {
 
 export const adminApi = {
   users: (params?: { page?: number; limit?: number; q?: string }) =>
-    request<{ data: User[]; pagination: Pagination }>(`/admin/users${query(params ?? {})}`),
+    request<ApiPage<User>>(`/admin/users${query(params ?? {})}`),
   getUser: (id: string) =>
-    request<{ user: User }>(`/admin/users/${id}`).then((response) => response.user),
+    request<ApiData<User>>(`/admin/users/${id}`).then((response) => response.data),
   workspaces: (params?: { page?: number; limit?: number; q?: string; user_id?: string }) =>
-    request<{ data: Workspace[]; pagination: Pagination }>(
-      `/admin/workspaces${query(params ?? {})}`
-    ),
+    request<ApiPage<Workspace>>(`/admin/workspaces${query(params ?? {})}`),
   createUser: (input: { name: string; email: string; password: string; role: User['role'] }) =>
-    request<{ user: User }>('/admin/users', {
+    request<ApiData<User>>('/admin/users', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
   updateUser: (id: string, input: Partial<Pick<User, 'name' | 'email' | 'role' | 'is_active'>>) =>
-    request<{ user: User }>(`/admin/users/${id}`, {
+    request<ApiData<User>>(`/admin/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),
   resetPassword: (id: string) =>
-    request<{ message: string; user: { id: string; email: string; newPassword: string } }>(
+    request<ApiData<{ id: string; email: string; newPassword: string }>>(
       `/admin/users/${id}/reset-password`,
       { method: 'POST' }
     ),
