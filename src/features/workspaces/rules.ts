@@ -1,4 +1,4 @@
-import type { WorkspaceAction, WorkspaceStatus } from './types';
+import type { InterfaceType, WorkspaceAction, WorkspaceInterfaces, WorkspaceStatus } from './types';
 
 type Availability = { allowed: true } | { allowed: false; reason: string };
 
@@ -37,3 +37,12 @@ export function getActionState(status: WorkspaceStatus, action: WorkspaceAction,
     title: availability.allowed ? undefined : availability.reason,
   };
 }
+
+/**
+ * Indica si el workspace ofrece la interfaz pedida (misma regla que la API): las de escritorio
+ * solo el escritorio, más la terminal si tienen `has_terminal`; las de terminal solo la terminal.
+ */
+export const supportsInterface = (workspace: WorkspaceInterfaces, target: InterfaceType) =>
+  target === 'desktop'
+    ? workspace.interface_type === 'desktop'
+    : workspace.interface_type === 'terminal' || workspace.has_terminal;

@@ -1,5 +1,5 @@
 import type { ListParams } from '@/shared/api/types';
-import type { AdminWorkspaceListParams } from './types';
+import type { AdminWorkspaceListParams, InterfaceType } from './types';
 
 export const workspaceKeys = {
   all: ['workspaces'] as const,
@@ -11,7 +11,8 @@ export const workspaceKeys = {
 
   detail: (id: string) => [...workspaceKeys.all, 'detail', id] as const,
   metrics: (id: string) => [...workspaceKeys.detail(id), 'metrics'] as const,
-  desktopSession: (id: string) => [...workspaceKeys.detail(id), 'desktop-session'] as const,
+  containerSession: (id: string, target: InterfaceType) =>
+    [...workspaceKeys.detail(id), 'container-session', target] as const,
 
   operation: ['workspaces', 'operation'] as const,
 };

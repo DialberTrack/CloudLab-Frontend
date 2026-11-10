@@ -13,7 +13,8 @@ import { WorkspaceStatusBadge } from '../components/WorkspaceStatusBadge';
 import { workspaceKeys } from '../keys';
 import { useWorkspaceOperations } from '../mutations';
 import { useWorkspace, useWorkspaceMetrics } from '../queries';
-import { getActionState } from '../rules';
+import { interfaceSummary } from '@/features/container-images/presentation';
+import { getActionState, supportsInterface } from '../rules';
 import type { WorkspaceDetails } from '../types';
 
 export function WorkspaceDetailPage() {
@@ -78,12 +79,24 @@ export function WorkspaceDetailPage() {
                         ↻ Reintentar
                       </button>
                     )}
-                    {status === 'running' && (
+                    {status === 'running' && supportsInterface(workspace, 'desktop') && (
                       <Link
                         className="small-button small-button-primary"
                         to={paths.workspaceDesktop(workspace.id)}
                       >
                         🖥️ Abrir escritorio
+                      </Link>
+                    )}
+                    {status === 'running' && supportsInterface(workspace, 'terminal') && (
+                      <Link
+                        className={
+                          workspace.interface_type === 'terminal'
+                            ? 'small-button small-button-primary'
+                            : 'small-button'
+                        }
+                        to={paths.workspaceTerminal(workspace.id)}
+                      >
+                        ⌨ Abrir terminal
                       </Link>
                     )}
                     <button
@@ -130,6 +143,10 @@ export function WorkspaceDetailPage() {
                       <dd className="font-mono text-xs">
                         {workspace.container_id ?? 'No asignado'}
                       </dd>
+                    </div>
+                    <div className="justify-between flex">
+                      <dt className="text-slate-500">Interfaz</dt>
+                      <dd>{interfaceSummary(workspace)}</dd>
                     </div>
                     <div className="justify-between flex">
                       <dt className="text-slate-500">Creado</dt>
@@ -179,7 +196,7 @@ function MetricsSection({ id, running }: { id: string; running: boolean }) {
   }
   return (
     <div className="mt-5">
-      <MetricsPanel stats={metricsQuery.data} />
+      <MetricsPanel metrics={metricsQuery.data} />
     </div>
   );
 }

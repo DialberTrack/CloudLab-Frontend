@@ -2,25 +2,37 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { messageOf } from '@/shared/api/errors';
 import { Alert } from '@/shared/ui/Alert';
-import { CheckboxField, TextAreaField, TextField } from '@/shared/ui/Fields';
+import { CheckboxField, SelectField, TextAreaField, TextField } from '@/shared/ui/Fields';
 import { Modal } from '@/shared/ui/Modal';
 import { useCreateContainerImage, useUpdateContainerImage } from '../mutations';
-import type { ContainerImage, CreateContainerImageInput } from '../types';
+import { interfaceTypeLabel } from '../presentation';
+import type {
+  ContainerImage,
+  CreateContainerImageInput,
+  InterfaceType,
+  UpdateContainerImageInput,
+} from '../types';
 
 type FormState = {
   name: string;
   image: string;
   description: string;
   icon: string;
+  interface_type: InterfaceType;
+  has_terminal: boolean;
   is_active: boolean;
   sort_order: number;
 };
+
+const INTERFACE_TYPES = Object.keys(interfaceTypeLabel) as InterfaceType[];
 
 const emptyForm: FormState = {
   name: '',
   image: '',
   description: '',
   icon: '',
+  interface_type: 'desktop',
+  has_terminal: false,
   is_active: true,
   sort_order: 0,
 };
@@ -32,19 +44,33 @@ const formFor = (image?: ContainerImage): FormState =>
         image: image.image,
         description: image.description ?? '',
         icon: image.icon ?? '',
+        interface_type: image.interface_type,
+        has_terminal: image.has_terminal,
         is_active: image.is_active,
         sort_order: image.sort_order,
       }
     : emptyForm;
 
 /** Los campos opcionales vacíos se envían como `null`, no como cadena vacía. */
-const toInput = (form: FormState): CreateContainerImageInput => ({
+const toUpdateInput = (form: FormState): UpdateContainerImageInput => ({
   name: form.name.trim(),
   image: form.image.trim(),
   description: form.description.trim() || null,
   icon: form.icon.trim() || null,
   is_active: form.is_active,
   sort_order: form.sort_order,
+});
+
+/** Solo al crear se envían `interface_type` y `has_terminal`; después ya no se editan. */
+const toCreateInput = (form: FormState): CreateContainerImageInput => ({
+  name: form.name.trim(),
+  image: form.image.trim(),
+  description: form.description.trim() || null,
+  icon: form.icon.trim() || null,
+  is_active: form.is_active,
+  sort_order: form.sort_order,
+  interface_type: form.interface_type,
+  has_terminal: form.interface_type === 'terminal' ? true : form.has_terminal,
 });
 
 type ImageFormModalProps = {
@@ -64,9 +90,11 @@ export function ImageFormModal({ image, onClose }: ImageFormModalProps) {
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    const input = toInput(form);
-    if (image) updateImage.mutate({ id: image.id, input }, { onSuccess: onClose });
-    else createImage.mutate(input, { onSuccess: onClose });
+    if (image) {
+      updateImage.mutate({ id: image.id, input: toUpdateInput(form) }, { onSuccess: onClose });
+    } else {
+      createImage.mutate(toCreateInput(form), { onSuccess: onClose });
+    }
   };
 
   return (
@@ -111,6 +139,30 @@ export function ImageFormModal({ image, onClose }: ImageFormModalProps) {
           value={form.icon}
           onChange={(event) => set('icon', event.target.value)}
         />
+        <SelectField
+          label="Tipo de interfaz"
+          value={form.interface_type}
+          disabled={Boolean(image)}
+          onChange={(event) => set('interface_type', event.target.value as InterfaceType)}
+        >
+          {INTERFACE_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {interfaceTypeLabel[type]}
+            </option>
+          ))}
+        </SelectField>
+        <CheckboxField
+          label="Incluye terminal"
+          checked={form.interface_type === 'terminal' || form.has_terminal}
+          disabled={Boolean(image) || form.interface_type === 'terminal'}
+          onChange={(event) => set('has_terminal', event.target.checked)}
+        />
+        {image && (
+          <p className="text-xs text-slate-500">
+            El tipo de interfaz y la terminal no se pueden cambiar: los workspaces existentes
+            dependen de ellos.
+          </p>
+        )}
         <TextField
           label="Orden de clasificación"
           type="number"

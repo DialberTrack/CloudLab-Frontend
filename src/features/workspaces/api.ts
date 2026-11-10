@@ -3,9 +3,10 @@ import type { ListParams } from '@/shared/api/types';
 import type {
   AdminWorkspaceListParams,
   CreateWorkspaceInput,
-  DockerStats,
+  InterfaceType,
   WorkspaceDetails,
   WorkspaceListItem,
+  WorkspaceMetrics,
   WorkspaceOperation,
 } from './types';
 
@@ -22,10 +23,15 @@ export const workspacesApi = {
 
   remove: (id: string) => http.remove(`/workspaces/${id}`),
 
-  metrics: (id: string) => http.get<DockerStats>(`/workspaces/${id}/metrics`),
+  metrics: (id: string) => http.get<WorkspaceMetrics>(`/workspaces/${id}/metrics`),
 
-  /** Establece la cookie temporal con la que el proxy autoriza el escritorio. */
-  createContainerSession: (id: string) => http.post(`/workspaces/${id}/container-session`),
+  /**
+   * Establece la cookie temporal con la que el proxy autoriza el escritorio o la terminal.
+   * Sin `target` la API usa la interfaz principal de la imagen. El cuerpo siempre se envía
+   * (aunque sea `{}`) porque la API lo valida.
+   */
+  createContainerSession: (id: string, target?: InterfaceType) =>
+    http.post(`/workspaces/${id}/container-session`, { target }),
 };
 
 export const adminWorkspacesApi = {

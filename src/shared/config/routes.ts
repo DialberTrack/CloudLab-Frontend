@@ -4,6 +4,7 @@ export const paths = {
   workspaces: '/workspaces',
   workspace: (id: string) => `/workspaces/${id}`,
   workspaceDesktop: (id: string) => `/workspaces/${id}/desktop`,
+  workspaceTerminal: (id: string) => `/workspaces/${id}/terminal`,
   images: '/images',
   profile: '/profile',
   adminUsers: '/admin/users',

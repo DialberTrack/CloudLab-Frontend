@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { paths } from '@/shared/config/routes';
+import { interfaceSummary } from '@/features/container-images/presentation';
 import { getActionState } from '../rules';
 import type { WorkspaceListItem, WorkspaceOperation } from '../types';
 import { WorkspaceStatusBadge } from './WorkspaceStatusBadge';
@@ -35,6 +36,7 @@ export function WorkspaceCard({ workspace, busy, onRun, onDelete }: WorkspaceCar
       <p className="workspace-meta">
         {workspace.image_name} · {workspace.image}
       </p>
+      <p className="workspace-meta">{interfaceSummary(workspace)}</p>
       {status === 'error' && <p className="workspace-error">El workspace necesita atención.</p>}
       <div className="workspace-actions">
         <button

@@ -1,14 +1,5 @@
 import { formatBytes } from '@/shared/lib/format';
-import type { DockerStats } from '../types';
-
-type Metrics = {
-  cpuPercent: number;
-  memoryUsageBytes: number;
-  memoryLimitBytes: number;
-  memoryPercent: number;
-  networkRxBytes: number;
-  networkTxBytes: number;
-};
+import type { WorkspaceMetrics } from '../types';
 
 function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
@@ -20,9 +11,7 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
   );
 }
 
-export function MetricsPanel({ stats }: { stats: DockerStats }) {
-  const metrics = stats as Metrics;
-
+export function MetricsPanel({ metrics }: { metrics: WorkspaceMetrics }) {
   return (
     <div className="space-y-4">
       <div className="metrics-grid">

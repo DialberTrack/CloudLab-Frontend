@@ -68,16 +68,12 @@ export function AdminWorkspacesPage() {
                             <WorkspaceStatusBadge status={item.status} />
                           </td>
                           <td className="font-mono text-xs">
-                            {item.user_id ? (
-                              <Link
-                                className="hover:text-violet-300"
-                                to={paths.adminUser(item.user_id)}
-                              >
-                                {item.user_id}
-                              </Link>
-                            ) : (
-                              '—'
-                            )}
+                            <Link
+                              className="hover:text-violet-300"
+                              to={paths.adminUser(item.user_id)}
+                            >
+                              {item.user_id}
+                            </Link>
                           </td>
                           <td>{formatDate(item.created_at)}</td>
                           <td>

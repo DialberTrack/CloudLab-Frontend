@@ -65,6 +65,14 @@ const routes: RouteObject[] = [
                 ),
               },
               {
+                path: 'workspaces/:id/terminal',
+                ...titled('Terminal'),
+                ...page(
+                  () => import('@/features/workspaces/pages/WorkspaceTerminalPage'),
+                  'WorkspaceTerminalPage'
+                ),
+              },
+              {
                 path: 'images',
                 ...titled('Imágenes'),
                 ...page(() => import('@/features/container-images/pages/ImagesPage'), 'ImagesPage'),

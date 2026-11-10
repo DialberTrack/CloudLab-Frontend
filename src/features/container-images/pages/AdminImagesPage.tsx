@@ -9,6 +9,7 @@ import { ContainerImageIcon } from '../components/ContainerImageIcon';
 import { ImageFormModal } from '../components/ImageFormModal';
 import { ImageStatusBadge } from '../components/ImageStatusBadge';
 import { useDeleteContainerImage } from '../mutations';
+import { interfaceSummary } from '../presentation';
 import { useContainerImages } from '../queries';
 import type { ContainerImage } from '../types';
 
@@ -62,6 +63,7 @@ export function AdminImagesPage() {
                   <tr>
                     <th scope="col">Nombre</th>
                     <th scope="col">Referencia Docker</th>
+                    <th scope="col">Interfaz</th>
                     <th scope="col">Estado</th>
                     <th scope="col">Orden</th>
                     <th scope="col">Acciones</th>
@@ -77,6 +79,7 @@ export function AdminImagesPage() {
                         </div>
                       </td>
                       <td className="font-mono text-xs">{image.image}</td>
+                      <td>{interfaceSummary(image)}</td>
                       <td>
                         <ImageStatusBadge active={image.is_active} />
                       </td>

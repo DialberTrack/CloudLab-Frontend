@@ -6,11 +6,11 @@ import { Loading } from '@/shared/ui/Loading';
 import { QualityMenu } from '../desktop/QualityMenu';
 import { desktopUrl } from '../desktop/url';
 import { useKasmQuality } from '../desktop/useKasmQuality';
-import { useDesktopSession } from '../queries';
+import { useContainerSession } from '../queries';
 
 export function WorkspaceDesktopPage() {
   const { id = '' } = useParams();
-  const session = useDesktopSession(id);
+  const session = useContainerSession(id, 'desktop');
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const quality = useKasmQuality(iframeRef);
 

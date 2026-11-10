@@ -1,3 +1,4 @@
+import { interfaceSummary } from '../presentation';
 import type { ContainerImage } from '../types';
 import { ContainerImageIcon } from './ContainerImageIcon';
 import { ImageStatusBadge } from './ImageStatusBadge';
@@ -20,6 +21,7 @@ export function ImageCard({ image, isAdmin, onUse }: ImageCardProps) {
         <ImageStatusBadge active={image.is_active} className="shrink-0" />
       </div>
       <p className="mt-3 font-mono text-xs text-slate-500">{image.image}</p>
+      <p className="mt-1 text-xs text-slate-500">{interfaceSummary(image)}</p>
       {image.description && <p className="mt-3 text-sm text-slate-400">{image.description}</p>}
       <div className="mt-auto pt-5">
         {image.is_active || isAdmin ? (

@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { ListParams } from '@/shared/api/types';
 import { adminWorkspacesApi, workspacesApi } from './api';
-import type { AdminWorkspaceListParams } from './types';
+import type { AdminWorkspaceListParams, InterfaceType } from './types';
 import { workspaceKeys } from './keys';
 
 export const useWorkspaces = (params: ListParams) =>
@@ -32,12 +32,12 @@ export const useWorkspaceMetrics = (id: string, enabled: boolean) =>
     enabled,
   });
 
-/** Abre la sesión del escritorio remoto; se repite en cada montaje. */
-export const useDesktopSession = (id: string) =>
+/** Abre la sesión del escritorio o la terminal; se repite en cada montaje. */
+export const useContainerSession = (id: string, target: InterfaceType) =>
   useQuery({
-    queryKey: workspaceKeys.desktopSession(id),
+    queryKey: workspaceKeys.containerSession(id, target),
     queryFn: async () => {
-      await workspacesApi.createContainerSession(id);
+      await workspacesApi.createContainerSession(id, target);
       return true;
     },
     gcTime: 0,
