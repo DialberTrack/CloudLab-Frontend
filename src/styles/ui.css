@@ -64,7 +64,7 @@
 
   /* Estados y avisos */
   .status {
-    @apply inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ring-1;
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1;
   }
 
   .alert {

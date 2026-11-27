@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { messageOf } from '@/shared/api/errors';
 import { paths } from '@/shared/config/routes';
+import { ActionButton } from '@/shared/ui/ActionButton';
 import { Alert } from '@/shared/ui/Alert';
 import { TextField } from '@/shared/ui/Fields';
 import { Modal } from '@/shared/ui/Modal';
@@ -70,9 +71,14 @@ export function CreateWorkspaceModal({ image, onClose }: CreateWorkspaceModalPro
           >
             Cancelar
           </button>
-          <button type="submit" className="primary-button" disabled={createWorkspace.isPending}>
-            {createWorkspace.isPending ? 'Creando...' : 'Crear workspace'}
-          </button>
+          <ActionButton
+            type="submit"
+            className="primary-button inline-flex items-center"
+            loading={createWorkspace.isPending}
+            loadingLabel="Creando..."
+          >
+            Crear workspace
+          </ActionButton>
         </div>
       </form>
     </Modal>

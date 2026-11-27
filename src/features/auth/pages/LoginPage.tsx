@@ -7,6 +7,15 @@ import { TextField } from '@/shared/ui/Fields';
 import { Logo } from '@/shared/ui/Logo';
 import { useAuth } from '../AuthContext';
 
+const DEMO_USERS = [
+  {
+    role: 'admin',
+    name: 'Administrador',
+    email: 'admin@cloudlab.local',
+    password: 'password123',
+  },
+] as const;
+
 export function LoginPage() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
@@ -16,6 +25,12 @@ export function LoginPage() {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     login.mutate({ email: email.trim(), password });
+  };
+
+  const loginAsDemo = (user: (typeof DEMO_USERS)[number]) => {
+    setEmail(user.email);
+    setPassword(user.password);
+    login.mutate({ email: user.email, password: user.password });
   };
 
   return (
@@ -58,6 +73,31 @@ export function LoginPage() {
         <button type="submit" className="primary-button mt-7 w-full" disabled={login.isPending}>
           {login.isPending ? 'Iniciando sesión...' : 'Iniciar sesión'}
         </button>
+
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <p className="mb-3 text-center text-xs uppercase tracking-widest text-white/50">
+            Cuentas de demostración
+          </p>
+          <div className="grid gap-2">
+            {DEMO_USERS.map((user) => (
+              <button
+                key={user.email}
+                type="button"
+                disabled={login.isPending}
+                onClick={() => loginAsDemo(user)}
+                className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-white/25 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span>
+                  <span className="block text-sm font-medium">{user.name}</span>
+                  <span className="block text-xs text-white/50">{user.email}</span>
+                </span>
+                <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium">
+                  {user.role}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </form>
     </main>
   );

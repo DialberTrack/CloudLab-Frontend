@@ -1,7 +1,11 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { ListParams } from '@/shared/api/types';
 import { adminWorkspacesApi, workspacesApi } from './api';
+import { waitForDesktop } from './desktop/waitForDesktop';
+import { isTransitional } from './rules';
 import type { AdminWorkspaceListParams } from './types';
+
+const POLL_MS = 2000;
 import { workspaceKeys } from './keys';
 
 export const useWorkspaces = (params: ListParams) =>
@@ -9,6 +13,8 @@ export const useWorkspaces = (params: ListParams) =>
     queryKey: workspaceKeys.list(params),
     queryFn: () => workspacesApi.list(params),
     placeholderData: keepPreviousData,
+    refetchInterval: (query) =>
+      query.state.data?.items.some((item) => isTransitional(item.status)) ? POLL_MS : false,
   });
 
 export const useAdminWorkspaces = (params: AdminWorkspaceListParams) =>
@@ -16,12 +22,16 @@ export const useAdminWorkspaces = (params: AdminWorkspaceListParams) =>
     queryKey: workspaceKeys.adminList(params),
     queryFn: () => adminWorkspacesApi.list(params),
     placeholderData: keepPreviousData,
+    refetchInterval: (query) =>
+      query.state.data?.items.some((item) => isTransitional(item.status)) ? POLL_MS : false,
   });
 
 export const useWorkspace = (id: string) =>
   useQuery({
     queryKey: workspaceKeys.detail(id),
     queryFn: () => workspacesApi.get(id),
+    refetchInterval: (query) =>
+      query.state.data && isTransitional(query.state.data.status) ? POLL_MS : false,
   });
 
 /** Las métricas solo existen mientras el contenedor está activo. */
@@ -36,8 +46,9 @@ export const useWorkspaceMetrics = (id: string, enabled: boolean) =>
 export const useDesktopSession = (id: string) =>
   useQuery({
     queryKey: workspaceKeys.desktopSession(id),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       await workspacesApi.createContainerSession(id);
+      await waitForDesktop(id, { signal });
       return true;
     },
     gcTime: 0,

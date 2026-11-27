@@ -18,6 +18,9 @@ export function WorkspaceDesktopPage() {
     return (
       <section className="desktop-page">
         <Alert message={messageOf(session.error)} />
+        <button type="button" className="ghost-button mt-4" onClick={() => void session.refetch()}>
+          Reintentar
+        </button>
       </section>
     );
   }

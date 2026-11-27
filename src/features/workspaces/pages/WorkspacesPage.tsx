@@ -62,7 +62,7 @@ export function WorkspacesPage() {
                 <WorkspaceCard
                   key={workspace.id}
                   workspace={workspace}
-                  busy={operations.isBusy(workspace.id)}
+                  pending={operations.pendingAction(workspace.id)}
                   onRun={(operation) => void operations.run(workspace.id, operation)}
                   onDelete={() => void operations.remove(workspace)}
                 />

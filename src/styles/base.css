@@ -21,6 +21,11 @@ button:disabled {
   opacity: 0.55;
 }
 
+button[aria-busy='true']:disabled {
+  cursor: progress;
+  opacity: 1;
+}
+
 select option {
   background: #0f172a;
   color: #cbd5e1;

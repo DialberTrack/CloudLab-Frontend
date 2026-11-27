@@ -4,6 +4,7 @@ import { messageOf } from '@/shared/api/errors';
 import { paths } from '@/shared/config/routes';
 import { formatDateTime } from '@/shared/lib/format';
 import { Alert } from '@/shared/ui/Alert';
+import { ActionButton } from '@/shared/ui/ActionButton';
 import { Loading } from '@/shared/ui/Loading';
 import { PageHeader } from '@/shared/ui/PageHeader';
 import { QueryContent } from '@/shared/ui/QueryContent';
@@ -13,6 +14,7 @@ import { WorkspaceStatusBadge } from '../components/WorkspaceStatusBadge';
 import { workspaceKeys } from '../keys';
 import { useWorkspaceOperations } from '../mutations';
 import { useWorkspace, useWorkspaceMetrics } from '../queries';
+import { workspaceActionProgress } from '../presentation';
 import { getActionState } from '../rules';
 import type { WorkspaceDetails } from '../types';
 
@@ -43,7 +45,8 @@ export function WorkspaceDetailPage() {
       )}
       <QueryContent query={workspaceQuery}>
         {(workspace) => {
-          const busy = operations.isBusy(workspace.id);
+          const pending = operations.pendingAction(workspace.id);
+          const busy = pending !== undefined;
           const { status } = workspace;
           return (
             <>
@@ -69,14 +72,15 @@ export function WorkspaceDetailPage() {
                   <h2 className="section-title">Operaciones</h2>
                   <div className="gap-2 flex flex-wrap mt-5">
                     {status === 'error' && (
-                      <button
-                        type="button"
+                      <ActionButton
                         className="small-button small-button-primary"
                         {...getActionState(status, 'retry', busy)}
+                        loading={pending === 'retry'}
+                        loadingLabel={workspaceActionProgress.retry}
                         onClick={() => void operations.run(workspace.id, 'retry')}
                       >
                         ↻ Reintentar
-                      </button>
+                      </ActionButton>
                     )}
                     {status === 'running' && (
                       <Link
@@ -86,38 +90,42 @@ export function WorkspaceDetailPage() {
                         🖥️ Abrir escritorio
                       </Link>
                     )}
-                    <button
-                      type="button"
+                    <ActionButton
                       className="small-button small-button-primary"
                       {...getActionState(status, 'start', busy)}
+                      loading={pending === 'start'}
+                      loadingLabel={workspaceActionProgress.start}
                       onClick={() => void operations.run(workspace.id, 'start')}
                     >
                       ▶ Iniciar
-                    </button>
-                    <button
-                      type="button"
+                    </ActionButton>
+                    <ActionButton
                       className="small-button"
                       {...getActionState(status, 'stop', busy)}
+                      loading={pending === 'stop'}
+                      loadingLabel={workspaceActionProgress.stop}
                       onClick={() => void operations.run(workspace.id, 'stop')}
                     >
                       ■ Detener
-                    </button>
-                    <button
-                      type="button"
+                    </ActionButton>
+                    <ActionButton
                       className="small-button"
                       {...getActionState(status, 'restart', busy)}
+                      loading={pending === 'restart'}
+                      loadingLabel={workspaceActionProgress.restart}
                       onClick={() => void operations.run(workspace.id, 'restart')}
                     >
                       ↻ Reiniciar
-                    </button>
-                    <button
-                      type="button"
+                    </ActionButton>
+                    <ActionButton
                       className="small-button text-rose-300"
                       {...getActionState(status, 'delete', busy)}
+                      loading={pending === 'delete'}
+                      loadingLabel={workspaceActionProgress.delete}
                       onClick={() => void remove(workspace)}
                     >
                       Eliminar
-                    </button>
+                    </ActionButton>
                   </div>
                   {workspace.error_message && (
                     <p className="mt-4 p-3 text-sm text-rose-300 rounded-lg bg-rose-500/10">

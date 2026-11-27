@@ -1,5 +1,5 @@
 import type { BadgeTone } from '@/shared/ui/StatusBadge';
-import type { WorkspaceStatus } from './types';
+import type { WorkspaceAction, WorkspaceStatus } from './types';
 
 export const workspaceStatusLabel: Record<WorkspaceStatus, string> = {
   running: 'Activo',
@@ -15,4 +15,12 @@ export const workspaceStatusTone: Record<WorkspaceStatus, BadgeTone> = {
   creating: 'warning',
   deleting: 'caution',
   error: 'danger',
+};
+
+export const workspaceActionProgress: Record<WorkspaceAction, string> = {
+  start: 'Iniciando...',
+  stop: 'Deteniendo...',
+  restart: 'Reiniciando...',
+  retry: 'Reintentando...',
+  delete: 'Eliminando...',
 };

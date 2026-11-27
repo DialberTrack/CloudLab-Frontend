@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { paths } from '@/shared/config/routes';
 import { useListParams } from '@/shared/hooks/useListParams';
 import { formatDate } from '@/shared/lib/format';
+import { ActionButton } from '@/shared/ui/ActionButton';
 import { Alert } from '@/shared/ui/Alert';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { PageHeader } from '@/shared/ui/PageHeader';
@@ -11,6 +12,7 @@ import { SearchInput } from '@/shared/ui/SearchInput';
 import { WorkspaceStatusBadge } from '../components/WorkspaceStatusBadge';
 import { useWorkspaceOperations } from '../mutations';
 import { useAdminWorkspaces } from '../queries';
+import { workspaceActionProgress } from '../presentation';
 import { getActionState } from '../rules';
 
 const PAGE_SIZE = 20;
@@ -55,7 +57,8 @@ export function AdminWorkspacesPage() {
                   </thead>
                   <tbody>
                     {items.map((item) => {
-                      const busy = operations.isBusy(item.id);
+                      const pending = operations.pendingAction(item.id);
+                      const busy = pending !== undefined;
                       return (
                         <tr key={item.id}>
                           <td className="font-medium text-slate-200">
@@ -82,49 +85,54 @@ export function AdminWorkspacesPage() {
                           <td>{formatDate(item.created_at)}</td>
                           <td>
                             <div className="gap-1 flex flex-wrap">
-                              <button
-                                type="button"
+                              <ActionButton
                                 className="small-button"
                                 {...getActionState(item.status, 'start', busy)}
+                                loading={pending === 'start'}
+                                loadingLabel={workspaceActionProgress.start}
                                 onClick={() => void operations.run(item.id, 'start')}
                               >
                                 Iniciar
-                              </button>
-                              <button
-                                type="button"
+                              </ActionButton>
+                              <ActionButton
                                 className="small-button"
                                 {...getActionState(item.status, 'stop', busy)}
+                                loading={pending === 'stop'}
+                                loadingLabel={workspaceActionProgress.stop}
                                 onClick={() => void operations.run(item.id, 'stop')}
                               >
                                 Detener
-                              </button>
+                              </ActionButton>
                               {item.status === 'error' ? (
-                                <button
-                                  type="button"
+                                <ActionButton
                                   className="small-button small-button-primary"
                                   {...getActionState(item.status, 'retry', busy)}
+                                  loading={pending === 'retry'}
+                                  loadingLabel={workspaceActionProgress.retry}
                                   onClick={() => void operations.run(item.id, 'retry')}
                                 >
                                   Reintentar
-                                </button>
+                                </ActionButton>
                               ) : (
-                                <button
-                                  type="button"
+                                <ActionButton
                                   className="small-button"
                                   {...getActionState(item.status, 'restart', busy)}
+                                  loading={pending === 'restart'}
+                                  loadingLabel={workspaceActionProgress.restart}
                                   onClick={() => void operations.run(item.id, 'restart')}
                                 >
                                   Reiniciar
-                                </button>
+                                </ActionButton>
                               )}
-                              <button
-                                type="button"
+                              <ActionButton
                                 className="small-button text-rose-300"
                                 {...getActionState(item.status, 'delete', busy)}
+                                loading={pending === 'delete'}
+                                loadingLabel={workspaceActionProgress.delete}
                                 onClick={() => void operations.remove(item)}
                               >
                                 Eliminar
-                              </button>
+                              </ActionButton>
                             </div>
                           </td>
                         </tr>

@@ -44,9 +44,9 @@ export function useWorkspaceOperations() {
     },
   });
 
-  const pendingIds = useMutationState({
+  const pending = useMutationState({
     filters: { mutationKey: workspaceKeys.operation, status: 'pending' },
-    select: (item) => (item.state.variables as OperationVariables).id,
+    select: (item) => item.state.variables as OperationVariables,
   });
 
   const execute = async (variables: OperationVariables) => {
@@ -63,7 +63,9 @@ export function useWorkspaceOperations() {
   return {
     error,
     clearError: clear,
-    isBusy: (id: string) => pendingIds.includes(id),
+    isBusy: (id: string) => pending.some((item) => item.id === id),
+    /** Acción en curso sobre el workspace, para mostrar su progreso. */
+    pendingAction: (id: string) => pending.find((item) => item.id === id)?.action,
     run: (id: string, action: Exclude<WorkspaceAction, 'delete'>) => execute({ id, action }),
     /** Pide confirmación y elimina. Devuelve `true` solo si se eliminó. */
     remove: async (workspace: { id: string; name: string }) => {
