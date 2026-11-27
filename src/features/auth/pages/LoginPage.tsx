@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { FormEvent } from 'react';
+import { type SubmitEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { messageOf } from '@/shared/api/errors';
 import { Alert } from '@/shared/ui/Alert';
@@ -14,6 +14,12 @@ const DEMO_USERS = [
     email: 'admin@cloudlab.local',
     password: 'password123',
   },
+  {
+    role: 'user',
+    name: 'Usuario',
+    email: 'user@cloudlab.local',
+    password: 'password123',
+  },
 ] as const;
 
 export function LoginPage() {
@@ -22,7 +28,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const login = useMutation({ mutationFn: signIn });
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     login.mutate({ email: email.trim(), password });
   };
@@ -57,7 +63,7 @@ export function LoginPage() {
             maxLength={255}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="tu@empresa.com"
+            placeholder="ejemplo@empresa.com"
           />
           <TextField
             label="Contraseña"

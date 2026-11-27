@@ -5,7 +5,7 @@ export function Spinner({ className }: { className?: string }) {
     <span
       aria-hidden="true"
       className={cx(
-        'inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent',
+        'inline-block size-3 shrink-0 animate-spin rounded-full motion-reduce:animate-[spin_2s_linear_infinite] border-2 border-current border-t-transparent',
         className
       )}
     />

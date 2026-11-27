@@ -6,6 +6,11 @@ import { isTransitional } from './rules';
 import type { AdminWorkspaceListParams } from './types';
 
 const POLL_MS = 2000;
+const MAX_POLL_MS = 15_000;
+
+/** Espaciado creciente (2 s → 15 s) para no consultar sin pausa si algo se atasca. */
+const pollInterval = (updates: number) =>
+  Math.min(POLL_MS * 1.5 ** Math.max(updates - 1, 0), MAX_POLL_MS);
 import { workspaceKeys } from './keys';
 
 export const useWorkspaces = (params: ListParams) =>
@@ -14,7 +19,9 @@ export const useWorkspaces = (params: ListParams) =>
     queryFn: () => workspacesApi.list(params),
     placeholderData: keepPreviousData,
     refetchInterval: (query) =>
-      query.state.data?.items.some((item) => isTransitional(item.status)) ? POLL_MS : false,
+      query.state.data?.items.some((item) => isTransitional(item.status))
+        ? pollInterval(query.state.dataUpdateCount)
+        : false,
   });
 
 export const useAdminWorkspaces = (params: AdminWorkspaceListParams) =>
@@ -23,7 +30,9 @@ export const useAdminWorkspaces = (params: AdminWorkspaceListParams) =>
     queryFn: () => adminWorkspacesApi.list(params),
     placeholderData: keepPreviousData,
     refetchInterval: (query) =>
-      query.state.data?.items.some((item) => isTransitional(item.status)) ? POLL_MS : false,
+      query.state.data?.items.some((item) => isTransitional(item.status))
+        ? pollInterval(query.state.dataUpdateCount)
+        : false,
   });
 
 export const useWorkspace = (id: string) =>
@@ -31,7 +40,9 @@ export const useWorkspace = (id: string) =>
     queryKey: workspaceKeys.detail(id),
     queryFn: () => workspacesApi.get(id),
     refetchInterval: (query) =>
-      query.state.data && isTransitional(query.state.data.status) ? POLL_MS : false,
+      query.state.data && isTransitional(query.state.data.status)
+        ? pollInterval(query.state.dataUpdateCount)
+        : false,
   });
 
 /** Las métricas solo existen mientras el contenedor está activo. */

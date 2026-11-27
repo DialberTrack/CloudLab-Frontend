@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest'; 
+import { describe, expect, it } from 'vitest';
 import { getActionAvailability, getActionState, isTransitional } from './rules';
 
-describe('reglas de acciones de workspaces', () => { 
+describe('reglas de acciones de workspaces', () => {
   it('considera transitorios solo creating y deleting', () => {
     expect(isTransitional('creating')).toBe(true);
     expect(isTransitional('deleting')).toBe(true);
-    expect(isTransitional('running')).toBe(false); 
+    expect(isTransitional('running')).toBe(false);
     expect(isTransitional('stopped')).toBe(false);
     expect(isTransitional('error')).toBe(false);
   });
@@ -13,7 +13,7 @@ describe('reglas de acciones de workspaces', () => {
   it('bloquea todas las acciones mientras el workspace cambia de estado', () => {
     for (const action of ['start', 'stop', 'restart', 'retry', 'delete'] as const) {
       expect(getActionAvailability('creating', action).allowed).toBe(false);
-      expect(getActionAvailability('deleting', action).allowed).toBe(false); 
+      expect(getActionAvailability('deleting', action).allowed).toBe(false);
     }
   });
 
@@ -38,14 +38,14 @@ describe('reglas de acciones de workspaces', () => {
   });
 
   it('permite eliminar en cualquier estado estable', () => {
-    for (const status of ['running', 'stopped', 'error'] as const) { 
+    for (const status of ['running', 'stopped', 'error'] as const) {
       expect(getActionAvailability(status, 'delete').allowed).toBe(true);
     }
   });
 
   it('deshabilita el botón y explica el motivo cuando la acción no aplica', () => {
     expect(getActionState('running', 'start')).toEqual({
-      disabled: true, 
+      disabled: true,
       title: 'El workspace ya está activo',
     });
   });

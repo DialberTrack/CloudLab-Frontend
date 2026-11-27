@@ -17,7 +17,11 @@ const sleep = (ms: number, signal?: AbortSignal) =>
 /** Espera a que el proxy deje de devolver 502/503/504 para el escritorio. */
 export async function waitForDesktop(
   workspaceId: string,
-  { signal, timeoutMs = 60_000, intervalMs = 1_500 }: {
+  {
+    signal,
+    timeoutMs = 60_000,
+    intervalMs = 1_500,
+  }: {
     signal?: AbortSignal;
     timeoutMs?: number;
     intervalMs?: number;
