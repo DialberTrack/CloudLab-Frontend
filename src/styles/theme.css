@@ -1,6 +1,8 @@
 /* Tokens de tema. Los valores reales viven en :root (oscuro); un tema nuevo
    solo debe sobrescribir estas variables, p. ej. :root[data-theme='light']. */
 :root {
+  color-scheme: dark;
+
   --app: #080b14;
   --sidebar: #0b0f1b;
   --raised: #111624;
@@ -54,4 +56,49 @@
   --color-fill-strong: var(--fill-strong);
   --color-field: var(--field);
   --color-inset: var(--inset);
+}
+
+/* Tema claro: solo sobrescribe tokens. Se activa con <html data-theme="light">. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --app: #f8fafc;
+  --sidebar: #ffffff;
+  --raised: #ffffff;
+  --option: #ffffff;
+
+  --fg-base: #0f172a;
+  --fg: #0f172a;
+  --fg-hover: #1e293b;
+  --fg-soft: #334155;
+  --fg-muted: #475569;
+  --fg-subtle: #64748b;
+  --fg-faint: #94a3b8;
+  --fg-strong: #020617;
+
+  --line-faint: rgb(15 23 42 / 0.05);
+  --line-subtle: rgb(15 23 42 / 0.08);
+  --line: rgb(15 23 42 / 0.12);
+  --line-hover: rgb(15 23 42 / 0.2);
+  --line-strong: rgb(15 23 42 / 0.28);
+
+  --fill: #ffffff;
+  --fill-hover: #f1f5f9;
+  --fill-active: #e9eef5;
+  --fill-strong: rgb(15 23 42 / 0.08);
+  --field: #ffffff;
+  --inset: rgb(15 23 42 / 0.03);
+
+  /* Textos de acento: los tonos -200/-300/-400 pensados para fondo oscuro
+     se oscurecen para mantener contraste sobre fondo claro. */
+  --color-cyan-300: #0e7490;
+  --color-violet-200: #5b21b6;
+  --color-violet-300: #6d28d9;
+  --color-violet-400: #7c3aed;
+  --color-rose-200: #9f1239;
+  --color-rose-300: #be123c;
+  --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
+  --color-amber-300: #b45309;
+  --color-orange-300: #c2410c;
 }

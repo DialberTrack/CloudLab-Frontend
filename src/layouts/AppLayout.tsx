@@ -5,6 +5,7 @@ import type { RouteHandle } from '@/shared/config/routes';
 import { cx } from '@/shared/lib/cx';
 import { Avatar } from '@/shared/ui/Avatar';
 import { Logo } from '@/shared/ui/Logo';
+import { ThemeToggle } from '@/shared/ui/ThemeToggle';
 import { adminNavigation, mainNavigation } from './navigation';
 import type { NavItem } from './navigation';
 
@@ -98,6 +99,7 @@ export function AppLayout() {
           </button>
           <p className="app-header-context">CloudLab / {title ?? 'Panel'}</p>
           <div className="app-header-status">
+            <ThemeToggle />
             <span className="app-header-status-label">Sistema operativo</span>
             <span className="app-header-status-indicator" />
             {user && (

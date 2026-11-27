@@ -2,6 +2,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './app/App';
+import { applyTheme, getInitialTheme } from './shared/theme/theme';
+
+// Antes del primer render, para evitar el parpadeo del tema.
+applyTheme(getInitialTheme());
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
