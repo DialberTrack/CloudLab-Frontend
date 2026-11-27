@@ -24,3 +24,11 @@ export const workspaceActionProgress: Record<WorkspaceAction, string> = {
   retry: 'Reintentando...',
   delete: 'Eliminando...',
 };
+
+export const workspaceActionDone: Record<WorkspaceAction, string> = {
+  start: 'Workspace iniciado',
+  stop: 'Workspace detenido',
+  restart: 'Workspace reiniciado',
+  retry: 'Reintento en curso',
+  delete: 'Workspace eliminado',
+};

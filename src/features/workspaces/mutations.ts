@@ -1,17 +1,21 @@
 import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-query';
 import { useErrorMessage } from '@/shared/hooks/useErrorMessage';
 import { useConfirm } from '@/shared/ui/confirm';
+import { useToast } from '@/shared/ui/toast';
 import { workspacesApi } from './api';
 import { workspaceKeys } from './keys';
+import { workspaceActionDone } from './presentation';
 import type { CreateWorkspaceInput, WorkspaceAction } from './types';
 
 export function useCreateWorkspace() {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: (input: CreateWorkspaceInput) => workspacesApi.create(input),
     onSuccess: (workspace) => {
       queryClient.setQueryData(workspaceKeys.detail(workspace.id), workspace);
+      toast.success('Workspace creado');
       return queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
     },
   });
@@ -26,6 +30,7 @@ type OperationVariables = { id: string; action: WorkspaceAction };
 export function useWorkspaceOperations() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
+  const toast = useToast();
   const { error, report, clear } = useErrorMessage();
 
   const mutation = useMutation({
@@ -53,6 +58,7 @@ export function useWorkspaceOperations() {
     clear();
     try {
       await mutation.mutateAsync(variables);
+      toast.success(workspaceActionDone[variables.action]);
       return true;
     } catch (reason) {
       report(reason);

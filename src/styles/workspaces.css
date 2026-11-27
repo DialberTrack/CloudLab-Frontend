@@ -1,6 +1,6 @@
 @layer components {
   .workspace-card {
-    @apply rounded-2xl border border-white/[0.07] bg-white/3 p-5 transition hover:border-white/15 hover:bg-white/5;
+    @apply rounded-2xl border border-line-subtle bg-fill p-5 transition hover:border-line-hover hover:bg-fill-hover;
   }
 
   .workspace-card-header {
@@ -12,7 +12,7 @@
   }
 
   .workspace-meta {
-    @apply mt-1 truncate text-xs text-slate-500;
+    @apply mt-1 truncate text-xs text-fg-subtle;
   }
 
   .workspace-error {
@@ -24,19 +24,19 @@
   }
 
   .metrics-card {
-    @apply rounded-xl border border-white/[0.07] bg-black/10 p-4;
+    @apply rounded-xl border border-line-subtle bg-inset p-4;
   }
 
   .metrics-label {
-    @apply text-xs text-slate-500;
+    @apply text-xs text-fg-subtle;
   }
 
   .metrics-value {
-    @apply mt-2 text-xl font-semibold text-slate-100;
+    @apply mt-2 text-xl font-semibold text-fg;
   }
 
   .metrics-detail {
-    @apply mt-1 text-xs text-slate-600;
+    @apply mt-1 text-xs text-fg-faint;
   }
 
   .metrics-grid {
@@ -44,7 +44,7 @@
   }
 
   .metrics-summary {
-    @apply flex flex-wrap gap-4 text-xs text-slate-600;
+    @apply flex flex-wrap gap-4 text-xs text-fg-faint;
   }
 
   .desktop-page {
@@ -53,7 +53,7 @@
   }
 
   .desktop-frame {
-    @apply min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black;
+    @apply min-h-0 flex-1 overflow-hidden rounded-2xl border border-line bg-black;
   }
 
   .quality-menu {
@@ -61,15 +61,15 @@
   }
 
   .quality-panel {
-    @apply absolute right-0 z-10 mt-2 flex max-h-[calc(100dvh-6rem)] w-80 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#111624] shadow-2xl;
+    @apply absolute right-0 z-10 mt-2 flex max-h-[calc(100dvh-6rem)] w-80 flex-col overflow-hidden rounded-xl border border-line bg-raised shadow-2xl;
   }
 
   .quality-panel-header {
-    @apply flex shrink-0 items-center justify-between gap-3 border-b border-white/10 p-4;
+    @apply flex shrink-0 items-center justify-between gap-3 border-b border-line p-4;
   }
 
   .quality-panel-title {
-    @apply text-sm font-semibold text-slate-100;
+    @apply text-sm font-semibold text-fg;
   }
 
   .quality-panel-controls {
@@ -77,7 +77,7 @@
   }
 
   .quality-control {
-    @apply block text-xs text-slate-400;
+    @apply block text-xs text-fg-muted;
   }
 
   .quality-control-label {
@@ -85,11 +85,11 @@
   }
 
   .quality-control-value {
-    @apply font-mono text-slate-200;
+    @apply font-mono text-fg-hover;
   }
 
   .quality-panel-actions {
-    @apply flex shrink-0 justify-end gap-2 border-t border-white/10 p-4;
+    @apply flex shrink-0 justify-end gap-2 border-t border-line p-4;
   }
 }
 

@@ -61,7 +61,7 @@ export function AdminWorkspacesPage() {
                       const busy = pending !== undefined;
                       return (
                         <tr key={item.id}>
-                          <td className="font-medium text-slate-200">
+                          <td className="font-medium text-fg-hover">
                             <Link className="hover:text-violet-300" to={paths.workspace(item.id)}>
                               {item.name}
                             </Link>

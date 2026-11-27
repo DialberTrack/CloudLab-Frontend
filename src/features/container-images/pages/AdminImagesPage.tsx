@@ -71,7 +71,7 @@ export function AdminImagesPage() {
                   {images.map((image) => (
                     <tr key={image.id}>
                       <td>
-                        <div className="items-center gap-3 flex font-medium text-slate-200">
+                        <div className="items-center gap-3 flex font-medium text-fg-hover">
                           <ContainerImageIcon name={image.name} icon={image.icon} />
                           {image.name}
                         </div>

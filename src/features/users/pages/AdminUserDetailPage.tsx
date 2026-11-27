@@ -24,7 +24,7 @@ export function AdminUserDetailPage() {
     <>
       <Link
         to={paths.adminUsers}
-        className="inline-block mb-6 text-sm text-slate-500 hover:text-slate-200"
+        className="inline-block mb-6 text-sm text-fg-subtle hover:text-fg-hover"
       >
         ← Volver a usuarios
       </Link>
@@ -37,21 +37,21 @@ export function AdminUserDetailPage() {
                 <h2 className="section-title">Información</h2>
                 <dl className="space-y-4 mt-5 text-sm">
                   <div>
-                    <dt className="text-slate-500">Correo</dt>
+                    <dt className="text-fg-subtle">Correo</dt>
                     <dd>{user.email}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Rol</dt>
+                    <dt className="text-fg-subtle">Rol</dt>
                     <dd>{roleLabel[user.role]}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Estado</dt>
+                    <dt className="text-fg-subtle">Estado</dt>
                     <dd>
                       <UserStatusBadge active={user.is_active} />
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Creado</dt>
+                    <dt className="text-fg-subtle">Creado</dt>
                     <dd>{formatDateTime(user.created_at)}</dd>
                   </div>
                 </dl>
@@ -71,11 +71,11 @@ export function AdminUserDetailPage() {
                             <Link
                               key={workspace.id}
                               to={paths.workspace(workspace.id)}
-                              className="items-center justify-between flex px-4 py-3 rounded-xl border border-white/6 transition hover:border-violet-400/30 hover:bg-white/4"
+                              className="items-center justify-between flex px-4 py-3 rounded-xl border border-line-subtle transition hover:border-violet-400/30 hover:bg-fill-hover"
                             >
                               <div className="min-w-0">
                                 <p className="truncate font-medium">{workspace.name}</p>
-                                <p className="truncate text-xs text-slate-500">
+                                <p className="truncate text-xs text-fg-subtle">
                                   {workspace.image_name} · {workspace.image}
                                 </p>
                               </div>

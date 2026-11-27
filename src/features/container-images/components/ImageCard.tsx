@@ -19,8 +19,8 @@ export function ImageCard({ image, isAdmin, onUse }: ImageCardProps) {
         </div>
         <ImageStatusBadge active={image.is_active} className="shrink-0" />
       </div>
-      <p className="mt-3 font-mono text-xs text-slate-500">{image.image}</p>
-      {image.description && <p className="mt-3 text-sm text-slate-400">{image.description}</p>}
+      <p className="mt-3 font-mono text-xs text-fg-subtle">{image.image}</p>
+      {image.description && <p className="mt-3 text-sm text-fg-muted">{image.description}</p>}
       <div className="mt-auto pt-5">
         {image.is_active || isAdmin ? (
           <button type="button" className="primary-button w-full" onClick={onUse}>
@@ -28,7 +28,7 @@ export function ImageCard({ image, isAdmin, onUse }: ImageCardProps) {
           </button>
         ) : (
           <span
-            className="block px-4 py-2.5 text-center text-sm text-slate-600 rounded-xl border border-white/10"
+            className="block px-4 py-2.5 text-center text-sm text-fg-faint rounded-xl border border-line"
             title="Activa esta imagen desde administración para usarla"
           >
             No disponible

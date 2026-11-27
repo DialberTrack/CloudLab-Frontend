@@ -1,15 +1,15 @@
 @layer components {
   /* Superficies */
   .panel {
-    @apply rounded-2xl border border-white/[0.07] bg-white/3 p-5 lg:p-6;
+    @apply rounded-2xl border border-line-subtle bg-fill p-5 lg:p-6;
   }
 
   .section-title {
-    @apply text-lg font-semibold text-slate-100;
+    @apply text-lg font-semibold text-fg;
   }
 
   .section-subtitle {
-    @apply mt-1 text-sm text-slate-500;
+    @apply mt-1 text-sm text-fg-subtle;
   }
 
   .page-header {
@@ -21,7 +21,7 @@
   }
 
   .page-subtitle {
-    @apply mt-2 text-slate-500;
+    @apply mt-2 text-fg-subtle;
   }
 
   /* Botones */
@@ -30,7 +30,7 @@
   }
 
   .ghost-button {
-    @apply rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/6 hover:text-white;
+    @apply rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-fg-soft transition hover:border-line-strong hover:bg-fill-active hover:text-fg-strong;
   }
 
   .danger-button {
@@ -38,7 +38,7 @@
   }
 
   .small-button {
-    @apply inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-xs font-medium leading-4 text-slate-300 transition hover:bg-white/6 hover:text-white;
+    @apply inline-flex items-center justify-center rounded-lg border border-line px-3 py-2 text-xs font-medium leading-4 text-fg-soft transition hover:bg-fill-active hover:text-fg-strong;
   }
 
   .small-button-primary {
@@ -46,20 +46,20 @@
   }
 
   .icon-button {
-    @apply text-2xl leading-none text-slate-500 transition hover:text-white;
+    @apply text-2xl leading-none text-fg-subtle transition hover:text-fg-strong;
   }
 
   /* Formularios */
   .field-label {
-    @apply block text-sm font-medium text-slate-300;
+    @apply block text-sm font-medium text-fg-soft;
   }
 
   .field {
-    @apply mt-2 block w-full rounded-xl border border-white/10 bg-black/20 px-3.5 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10;
+    @apply mt-2 block w-full rounded-xl border border-line bg-field px-3.5 py-3 text-sm text-fg outline-none transition placeholder:text-fg-faint focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10;
   }
 
   .checkbox-field {
-    @apply flex items-center gap-3 text-sm text-slate-300;
+    @apply flex items-center gap-3 text-sm text-fg-soft;
   }
 
   /* Estados y avisos */
@@ -67,20 +67,36 @@
     @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1;
   }
 
+  .toast-region {
+    @apply pointer-events-none fixed right-4 bottom-4 z-50 flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2;
+  }
+
+  .toast {
+    @apply pointer-events-auto flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg shadow-black/30 backdrop-blur-xl;
+  }
+
+  .toast-success {
+    @apply border-emerald-500/20 bg-emerald-500/10 text-emerald-200;
+  }
+
+  .toast-error {
+    @apply border-rose-500/20 bg-rose-500/10 text-rose-200;
+  }
+
   .alert {
     @apply flex items-start justify-between gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200;
   }
 
   .loading-state {
-    @apply grid min-h-48 place-items-center text-sm text-slate-500;
+    @apply grid min-h-48 place-items-center text-sm text-fg-subtle;
   }
 
   .empty-state {
-    @apply grid place-items-center rounded-xl border border-dashed border-white/10 py-14 text-center;
+    @apply grid place-items-center rounded-xl border border-dashed border-line py-14 text-center;
   }
 
   .empty-state-text {
-    @apply text-sm text-slate-500;
+    @apply text-sm text-fg-subtle;
   }
 
   /* Modales */
@@ -89,7 +105,7 @@
   }
 
   .modal {
-    @apply w-full max-w-lg rounded-2xl border border-white/10 bg-[#111624] p-6 shadow-2xl;
+    @apply w-full max-w-lg rounded-2xl border border-line bg-raised p-6 shadow-2xl;
   }
 
   .modal-header {
@@ -97,7 +113,7 @@
   }
 
   .confirm-message {
-    @apply text-sm leading-6 text-slate-400;
+    @apply text-sm leading-6 text-fg-muted;
   }
 
   .confirm-actions {
@@ -106,15 +122,15 @@
 
   /* Tablas y paginación */
   .data-table {
-    @apply w-full min-w-140 text-left text-sm text-slate-500;
+    @apply w-full min-w-140 text-left text-sm text-fg-subtle;
   }
 
   .data-table th {
-    @apply border-b border-white/[0.07] pb-3 text-xs font-medium uppercase tracking-wider text-slate-600;
+    @apply border-b border-line-subtle pb-3 text-xs font-medium uppercase tracking-wider text-fg-faint;
   }
 
   .data-table td {
-    @apply border-b border-white/5 py-4;
+    @apply border-b border-line-faint py-4;
   }
 
   .pagination {
@@ -122,7 +138,7 @@
   }
 
   .pagination-summary {
-    @apply text-xs text-slate-500;
+    @apply text-xs text-fg-subtle;
   }
 
   .pagination-actions {
@@ -147,6 +163,6 @@
   }
 
   .container-image {
-    @apply h-9 w-9 rounded-lg object-cover ring-1 ring-white/10;
+    @apply h-9 w-9 rounded-lg object-cover ring-1 ring-line;
   }
 }

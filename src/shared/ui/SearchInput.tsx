@@ -48,7 +48,7 @@ export function SearchInput({ value, placeholder = 'Buscar...', onSearch }: Sear
             aria-label="Limpiar búsqueda"
             title="Limpiar"
             onClick={clear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-fg-subtle transition hover:text-fg-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

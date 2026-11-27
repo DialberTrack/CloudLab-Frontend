@@ -1,12 +1,12 @@
 @layer components {
   .auth-page,
   .not-found-page {
-    @apply relative grid min-h-dvh place-items-center overflow-hidden bg-[#080b14] px-6 text-slate-100;
+    @apply relative grid min-h-dvh place-items-center overflow-hidden bg-app px-6 text-fg;
   }
 
   .auth-card,
   .not-found-card {
-    @apply relative w-full rounded-3xl border border-white/10 bg-white/6 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl;
+    @apply relative w-full rounded-3xl border border-line bg-fill-active p-8 shadow-2xl shadow-black/30 backdrop-blur-xl;
   }
 
   .auth-card {
@@ -46,7 +46,7 @@
   }
 
   .auth-description {
-    @apply mt-2 text-sm text-slate-400;
+    @apply mt-2 text-sm text-fg-muted;
   }
 
   .not-found-brand {
@@ -62,6 +62,6 @@
   }
 
   .not-found-description {
-    @apply mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-400;
+    @apply mx-auto mt-3 max-w-sm text-sm leading-6 text-fg-muted;
   }
 }

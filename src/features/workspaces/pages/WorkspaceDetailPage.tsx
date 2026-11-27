@@ -36,7 +36,7 @@ export function WorkspaceDetailPage() {
     <>
       <Link
         to={paths.workspaces}
-        className="inline-block mb-6 text-sm text-slate-500 hover:text-slate-200"
+        className="inline-block mb-6 text-sm text-fg-subtle hover:text-fg-hover"
       >
         ← Volver a workspaces
       </Link>
@@ -134,22 +134,22 @@ export function WorkspaceDetailPage() {
                   )}
                   <dl className="space-y-3 mt-8 text-sm">
                     <div className="justify-between flex">
-                      <dt className="text-slate-500">Container</dt>
+                      <dt className="text-fg-subtle">Container</dt>
                       <dd className="font-mono text-xs">
                         {workspace.container_id ?? 'No asignado'}
                       </dd>
                     </div>
                     <div className="justify-between flex">
-                      <dt className="text-slate-500">Creado</dt>
+                      <dt className="text-fg-subtle">Creado</dt>
                       <dd>{formatDateTime(workspace.created_at)}</dd>
                     </div>
                     {user?.role === 'admin' && (
                       <div className="justify-between flex">
-                        <dt className="text-slate-500">Dueño</dt>
+                        <dt className="text-fg-subtle">Dueño</dt>
                         <dd>
                           <Link
                             to={paths.adminUser(workspace.user_id)}
-                            className="font-mono text-slate-200 hover:text-violet-400/80"
+                            className="font-mono text-fg-hover hover:text-violet-400/80"
                           >
                             {workspace.user_id}
                           </Link>
@@ -176,7 +176,7 @@ function MetricsSection({ id, running }: { id: string; running: boolean }) {
 
   if (!running) {
     return (
-      <p className="mt-5 text-sm text-slate-500">
+      <p className="mt-5 text-sm text-fg-subtle">
         Las métricas están disponibles cuando el workspace está activo.
       </p>
     );

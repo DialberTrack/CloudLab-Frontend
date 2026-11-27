@@ -1,0 +1,57 @@
+/* Tokens de tema. Los valores reales viven en :root (oscuro); un tema nuevo
+   solo debe sobrescribir estas variables, p. ej. :root[data-theme='light']. */
+:root {
+  --app: #080b14;
+  --sidebar: #0b0f1b;
+  --raised: #111624;
+  --option: #0f172a;
+
+  --fg-base: #f8fafc;
+  --fg: #f1f5f9;
+  --fg-hover: #e2e8f0;
+  --fg-soft: #cbd5e1;
+  --fg-muted: #94a3b8;
+  --fg-subtle: #64748b;
+  --fg-faint: #475569;
+  --fg-strong: #ffffff;
+
+  --line-faint: rgb(255 255 255 / 0.05);
+  --line-subtle: rgb(255 255 255 / 0.07);
+  --line: rgb(255 255 255 / 0.1);
+  --line-hover: rgb(255 255 255 / 0.15);
+  --line-strong: rgb(255 255 255 / 0.2);
+
+  --fill: rgb(255 255 255 / 0.03);
+  --fill-hover: rgb(255 255 255 / 0.05);
+  --fill-active: rgb(255 255 255 / 0.06);
+  --fill-strong: rgb(255 255 255 / 0.1);
+  --field: rgb(0 0 0 / 0.2);
+  --inset: rgb(0 0 0 / 0.1);
+}
+
+@theme inline {
+  --color-app: var(--app);
+  --color-sidebar: var(--sidebar);
+  --color-raised: var(--raised);
+
+  --color-fg: var(--fg);
+  --color-fg-hover: var(--fg-hover);
+  --color-fg-soft: var(--fg-soft);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-faint: var(--fg-faint);
+  --color-fg-strong: var(--fg-strong);
+
+  --color-line-faint: var(--line-faint);
+  --color-line-subtle: var(--line-subtle);
+  --color-line: var(--line);
+  --color-line-hover: var(--line-hover);
+  --color-line-strong: var(--line-strong);
+
+  --color-fill: var(--fill);
+  --color-fill-hover: var(--fill-hover);
+  --color-fill-active: var(--fill-active);
+  --color-fill-strong: var(--fill-strong);
+  --color-field: var(--field);
+  --color-inset: var(--inset);
+}

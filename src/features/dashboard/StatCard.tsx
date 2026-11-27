@@ -19,7 +19,7 @@ export function StatCard({ label, value, icon, accent = false }: StatCardProps) 
         {icon}
       </div>
       <div>
-        <p className="text-xs text-slate-500">{label}</p>
+        <p className="text-xs text-fg-subtle">{label}</p>
         <p className="mt-1 text-2xl font-semibold">{value}</p>
       </div>
     </div>

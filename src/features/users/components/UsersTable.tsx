@@ -43,7 +43,7 @@ export function UsersTable({
                 <td>
                   <Link
                     to={paths.adminUser(user.id)}
-                    className="block font-medium text-slate-200 hover:text-violet-300"
+                    className="block font-medium text-fg-hover hover:text-violet-300"
                   >
                     {user.name}
                   </Link>

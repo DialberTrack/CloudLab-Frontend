@@ -49,6 +49,14 @@ export function WorkspaceCard({ workspace, pending, onRun, onDelete }: Workspace
         >
           {primary.label}
         </ActionButton>
+        {status === 'running' && (
+          <Link
+            className="small-button small-button-primary whitespace-nowrap"
+            to={paths.workspaceDesktop(workspace.id)}
+          >
+            🖥️ Escritorio
+          </Link>
+        )}
         <Link
           className="small-button flex-1 whitespace-nowrap text-center"
           to={paths.workspace(workspace.id)}

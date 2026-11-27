@@ -16,7 +16,7 @@ export function ProfilePage() {
         <section className="panel">
           <Avatar name={user.name} large />
           <h2 className="mt-5 text-xl font-semibold">{user.name}</h2>
-          <p className="mt-1 text-sm text-slate-500">{user.email}</p>
+          <p className="mt-1 text-sm text-fg-subtle">{user.email}</p>
           <StatusBadge tone={roleTone[user.role]} className="mt-4">
             {roleLabel[user.role]}
           </StatusBadge>

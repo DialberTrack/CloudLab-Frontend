@@ -1,10 +1,10 @@
 @layer components {
   .app-shell {
-    @apply min-h-screen bg-[#080b14] text-slate-100;
+    @apply min-h-screen bg-app text-fg;
   }
 
   .app-sidebar {
-    @apply fixed inset-y-0 left-0 z-30 w-64 border-r border-white/[0.07] bg-[#0b0f1b] p-5 transition-transform lg:translate-x-0;
+    @apply fixed inset-y-0 left-0 z-30 w-64 border-r border-line-subtle bg-sidebar p-5 transition-transform lg:translate-x-0;
   }
 
   .app-sidebar-open {
@@ -20,7 +20,7 @@
   }
 
   .app-sidebar-section-label {
-    @apply mb-3 mt-10 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600;
+    @apply mb-3 mt-10 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-fg-faint;
   }
 
   .app-sidebar-nav {
@@ -32,15 +32,15 @@
   }
 
   .app-sidebar-admin {
-    @apply mt-2 border-t border-white/[0.07] pt-3;
+    @apply mt-2 border-t border-line-subtle pt-3;
   }
 
   .app-sidebar-admin-label {
-    @apply px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600;
+    @apply px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-fg-faint;
   }
 
   .app-sidebar-user {
-    @apply absolute bottom-5 left-5 right-5 border-t border-white/[0.07] pt-4;
+    @apply absolute bottom-5 left-5 right-5 border-t border-line-subtle pt-4;
   }
 
   .app-sidebar-user-info {
@@ -52,11 +52,11 @@
   }
 
   .app-sidebar-user-email {
-    @apply truncate text-xs text-slate-500;
+    @apply truncate text-xs text-fg-subtle;
   }
 
   .app-sidebar-logout {
-    @apply mt-5 border-t border-white/[0.07] pt-4;
+    @apply mt-5 border-t border-line-subtle pt-4;
   }
 
   .app-mobile-overlay {
@@ -68,15 +68,15 @@
   }
 
   .app-header {
-    @apply sticky top-0 z-10 flex h-20 items-center justify-between border-b border-white/[0.07] bg-[#080b14]/80 px-5 backdrop-blur-xl lg:px-10;
+    @apply sticky top-0 z-10 flex h-20 items-center justify-between border-b border-line-subtle bg-app/80 px-5 backdrop-blur-xl lg:px-10;
   }
 
   .app-mobile-menu-button {
-    @apply text-2xl text-slate-400 lg:hidden;
+    @apply text-2xl text-fg-muted lg:hidden;
   }
 
   .app-header-context {
-    @apply hidden text-xs font-medium uppercase tracking-[0.2em] text-slate-500 lg:block;
+    @apply hidden text-xs font-medium uppercase tracking-[0.2em] text-fg-subtle lg:block;
   }
 
   .app-header-status {
@@ -84,7 +84,7 @@
   }
 
   .app-header-status-label {
-    @apply hidden text-xs text-slate-500 sm:block;
+    @apply hidden text-xs text-fg-subtle sm:block;
   }
 
   .app-header-status-indicator {
@@ -96,7 +96,7 @@
   }
 
   .nav-item {
-    @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-slate-500 transition hover:bg-white/5 hover:text-slate-200;
+    @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-fg-subtle transition hover:bg-fill-hover hover:text-fg-hover;
   }
 
   .nav-item-compact {
@@ -108,6 +108,6 @@
   }
 
   .logout-link {
-    @apply w-full rounded-xl px-3 py-2.5 text-left text-sm text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300;
+    @apply w-full rounded-xl px-3 py-2.5 text-left text-sm text-fg-subtle transition hover:bg-rose-500/10 hover:text-rose-300;
   }
 }
